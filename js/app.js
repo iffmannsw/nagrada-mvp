@@ -1,561 +1,325 @@
 /* ═══════════════════════════════════════════════════
-   «Наградной магазин» MVP — интерфейс: каталог, корзина,
-   оформление заказа, чат с Медалькиным
+   РАСПОРТ — интерфейс: витрина двух складов, корзина,
+   оформление со спецификацией, чат с Медалькиным
    ═══════════════════════════════════════════════════ */
-(() => {
+window.App = (() => {
   'use strict';
 
   const $ = s => document.querySelector(s);
-  const $$ = s => [...document.querySelectorAll(s)];
 
   /* ── состояние ── */
   const cart = new Map();          // id → qty
-  const state = { cat: 'all', q: '', sort: 'default' };
   let orderNum = null;
   let chatOpened = false;
+  let brain = null;
 
-  const brain = new MedalkinBrain(PRODUCTS);
-  const byId = id => PRODUCTS.find(p => p.id === id);
-
-  /* ══════════ КОМПЛЕКТЫ ══════════ */
-  function kitComposition(c) {
-    const g2 = c.gramota2 && byId(c.gramota2), g = c.gramota && byId(c.gramota);
-    const cup = c.cup && byId(c.cup), ml = c.medalL && byId(c.medalL), mr = c.medalR && byId(c.medalR);
-    return `
-      ${g2 ? `<div class="kit__comp-item kit__comp-item--gramota2">${svgArt(g2.artc)}</div>` : ''}
-      ${g ? `<div class="kit__comp-item kit__comp-item--gramota">${svgArt(g.artc)}</div>` : ''}
-      ${cup ? `<div class="kit__comp-item kit__comp-item--cup">${svgArt(cup.artc)}</div>` : ''}
-      ${ml ? `<div class="kit__comp-item kit__comp-item--medal-l">${svgArt(ml.artc)}</div>` : ''}
-      ${mr ? `<div class="kit__comp-item kit__comp-item--medal-r">${svgArt(mr.artc)}</div>` : ''}`;
-  }
-  function kitPrice(kit) {
-    const sum = kit.items.reduce((s, [id, q]) => s + byId(id).price * q, 0);
-    return { sum, total: Math.round(sum * (1 - KIT_DISCOUNT)) };
-  }
-  function renderKits() {
-    $('#kitsGrid').innerHTML = KITS.map(k => {
-      const { sum, total } = kitPrice(k);
-      return `<article class="kit" data-kit="${k.id}">
-        <div class="kit__scene">
-          <span class="kit__scene-badge">Комплектом дешевле · <b>−10%</b></span>
-          <div class="kit__composition">${kitComposition(k.composition)}</div>
-        </div>
-        <div class="kit__body">
-          <span class="kit__num">${k.num} / ${KITS.length}</span>
-          <h3 class="kit__name">${k.name}</h3>
-          <p class="kit__scene-desc">${k.scene}</p>
-          <ul class="kit__list">
-            ${k.items.map(([id, q]) => `<li><span class="li-name">${byId(id).name}</span><span class="li-qty">× ${q}</span></li>`).join('')}
-          </ul>
-          <div class="kit__foot">
-            <div class="kit__price">
-              <span class="price">${fmt(total)}</span>
-              <span class="price--old">${fmt(sum)}</span>
-            </div>
-            <button class="btn btn--coral" data-addkit="${k.id}" type="button">В корзину</button>
-          </div>
-        </div>
-      </article>`;
-    }).join('');
-  }
-  function addKitToCart(kitId) {
-    const k = KITS.find(x => x.id === kitId);
-    if (!k) return;
-    k.items.forEach(([id, q]) => cart.set(id, (cart.get(id) || 0) + q));
-    updateCartUI();
-    toast(`Комплект «${k.name}» — в корзине`);
-  }
-
-  /* ══════════ МАСКОТЫ ══════════ */
-  $('#heroMascot').innerHTML = mascotSVG();
-  $('#fabMascot').innerHTML = mascotSVG();
-  $('#chatMascot').innerHTML = mascotSVG();
-  $('#doneMedal').innerHTML = `<div class="mascot">${mascotSVG({ happy: true })}</div>`;
-  $('#factCount').textContent = PRODUCTS.length;
-
-  /* ── пузырь на hero: смена фраз ── */
-  const phrases = [
-    'Привет! Я Медалькин — помогу подобрать награды и собрать заказ',
-    'Скажите, какое мероприятие готовите — подберу под бюджет',
-    'Медали от 49 ₽, грамоты от 29 ₽, кубки от 344 ₽ — всё с нанесением',
-  ];
-  let phI = 0;
-  setInterval(() => {
-    const b = $('#heroBubble');
-    b.style.opacity = '0';
-    setTimeout(() => { phI = (phI + 1) % phrases.length; b.textContent = phrases[phI]; b.style.opacity = '1'; }, 260);
-  }, 7000);
-  $('#heroBubble').style.transition = 'opacity .26s ease';
-
-  /* ══════════ КАТАЛОГ ══════════ */
-  const tabsBox = $('#catTabs');
-  function renderTabs() {
-    const counts = { all: PRODUCTS.length };
-    Object.keys(CATS).forEach(c => counts[c] = PRODUCTS.filter(p => p.cat === c).length);
-    const items = [{ k: 'all', label: 'Все' }, ...Object.keys(CATS).map(k => ({ k, label: CATS[k].label }))];
-    tabsBox.innerHTML = items.map(({ k, label }) => `
-      <button class="tab" role="tab" data-cat="${k}" aria-selected="${state.cat === k}">
-        ${label} <span class="tab__count">${counts[k]}</span>
-      </button>`).join('');
-  }
-  tabsBox.addEventListener('click', e => {
-    const b = e.target.closest('.tab');
-    if (!b) return;
-    state.cat = b.dataset.cat;
-    renderTabs(); renderGrid();
-    $('#catalog').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-
-  function filtered() {
-    let list = PRODUCTS.slice();
-    if (state.cat !== 'all') list = list.filter(p => p.cat === state.cat);
-    const q = state.q.trim().toLowerCase().replace(/ё/g, 'е');
-    if (q) {
-      list = list.filter(p =>
-        (p.name + ' ' + p.art + ' ' + p.desc + ' ' + p.themes.map(t => THEMES[t]).join(' ')).toLowerCase().replace(/ё/g, 'е').includes(q));
-    }
-    if (state.sort === 'cheap') list.sort((a, b) => a.price - b.price);
-    if (state.sort === 'expensive') list.sort((a, b) => b.price - a.price);
-    if (state.sort === 'benefit') list.sort((a, b) => (b.oldPrice ? (b.oldPrice - b.price) / b.oldPrice : 0) - (a.oldPrice ? (a.oldPrice - a.price) / a.oldPrice : 0));
-    return list;
-  }
-
-  function badgeHtml(p) {
-    if (p.badge === 'hit') return '<span class="badge badge--hit">Хит</span>';
-    if (p.badge === 'new') return '<span class="badge badge--new">Новинка</span>';
-    if (p.badge === 'sale' && p.oldPrice) return `<span class="badge badge--sale">−${Math.round((1 - p.price / p.oldPrice) * 100)}%</span>`;
-    return '';
-  }
-
-  function cardHtml(p) {
-    return `<article class="p-card" data-id="${p.id}">
-      <div class="p-card__art" data-open="${p.id}" role="button" tabindex="0" aria-label="Открыть ${p.name}">
-        <div class="p-card__badges">${badgeHtml(p)}</div>
-        ${productArt(p)}
-      </div>
-      <div class="p-card__body">
-        <span class="p-card__cat">${CATS[p.cat].label} · ${p.themes[0] === 'universal' && p.themes.length > 1 ? THEMES[p.themes[1]] : THEMES[p.themes[0]]}</span>
-        <h3 class="p-card__name p-card__name--link" data-open="${p.id}">${p.name}</h3>
-        <span class="p-card__art-num">арт. ${p.art}</span>
-        <div class="p-card__foot">
-          <div class="p-card__prices">
-            <span class="price">${fmt(p.price)}</span>
-            ${p.oldPrice ? `<span class="price--old">${fmt(p.oldPrice)}</span>` : ''}
-          </div>
-          <button class="add-btn" data-add="${p.id}" type="button" aria-label="Добавить ${p.name} в корзину">
-            <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-      </div>
-    </article>`;
-  }
-
-  function renderGrid() {
-    const list = filtered();
-    $('#productGrid').innerHTML = list.map(cardHtml).join('');
-    $('#gridEmpty').hidden = list.length > 0;
-  }
-
-  $('#searchInput').addEventListener('input', e => { state.q = e.target.value; renderGrid(); });
-  $('#sortSelect').addEventListener('change', e => { state.sort = e.target.value; renderGrid(); });
-
-  /* ── модалка товара ── */
-  const modal = $('#productModal');
-  function openModal(p) {
-    $('#modalCard').innerHTML = `
-      <div class="pm__hero">
-        <div class="pm__badges">${badgeHtml(p)}</div>
-        ${productArt(p)}
-        <button class="icon-btn pm__close" data-close type="button" aria-label="Закрыть">
-          <svg viewBox="0 0 20 20" fill="none"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-      <div class="pm__body">
-        <div class="pm__cat">${CATS[p.cat].label}</div>
-        <h3 class="pm__name">${p.name}</h3>
-        <div class="pm__artnum">арт. ${p.art}</div>
-        <p class="pm__desc">${p.desc}</p>
-        <div class="pm__tags">${p.themes.map(t => `<span class="pm__tag">${THEMES[t]}</span>`).join('')}</div>
-        <div class="pm__foot">
-          <div class="pm__price">
-            <span class="price">${fmt(p.price)} <small>/ шт.</small></span>
-            ${p.oldPrice ? `<span class="price--old">${fmt(p.oldPrice)}</span>` : ''}
-          </div>
-          <button class="btn btn--gold" data-add="${p.id}" type="button">В корзину</button>
-        </div>
-      </div>`;
-    modal.hidden = false;
-    document.body.style.overflow = 'hidden';
-    modal.querySelector('[data-add]').focus();
-  }
-  function closeModal() { modal.hidden = true; document.body.style.overflow = ''; }
-  modal.addEventListener('click', e => {
-    if (e.target === modal || e.target.closest('[data-close]')) closeModal();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    if (!modal.hidden) return closeModal();
-    if (chatEl.classList.contains('is-open')) return closeChat();
-    if (drawer.classList.contains('is-open')) return closeDrawer();
-  });
-
-  /* общий обработчик кликов по каталогу */
-  document.addEventListener('click', e => {
-    const addkit = e.target.closest('[data-addkit]');
-    if (addkit) { addKitToCart(addkit.dataset.addkit); return; }
-    const open = e.target.closest('[data-open]');
-    if (open) { const p = byId(open.dataset.open); if (p) openModal(p); return; }
-    const add = e.target.closest('[data-add]');
-    if (add) addToCart(add.dataset.add);
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.matches('[data-open]')) e.target.click();
-  });
+  const byId = id => Shop.byId(id);
+  const allGoods = () => [...Shop.state.goods.shop, ...Shop.state.goods.remote];
 
   /* ══════════ КОРЗИНА ══════════ */
-  const drawer = $('#cartDrawer'), overlay = $('#overlay');
-  const cartCount = $('#cartCount');
-
-  const cartQty = () => [...cart.values()].reduce((s, q) => s + q, 0);
-  const cartSum = () => [...cart.entries()].reduce((s, [id, q]) => s + byId(id).price * q, 0);
-  /* скидка применяется автоматически, если в корзине полный состав комплекта */
-  function kitDiscount() {
-    return KITS.reduce((d, k) => {
-      const full = k.items.every(([id, q]) => (cart.get(id) || 0) >= q);
-      if (!full) return d;
-      return d + Math.round(k.items.reduce((s, [id, q]) => s + byId(id).price * q, 0) * KIT_DISCOUNT);
-    }, 0);
-  }
-  const cartTotal = () => cartSum() - kitDiscount();
+  function cartCount() { let n = 0; cart.forEach(q => n += q); return n; }
+  function cartTotal() { let s = 0; cart.forEach((q, id) => { const p = byId(id); if (p) s += p.price * q; }); return s; }
+  function cartHasRemote() { return [...cart.keys()].some(id => id[0] === 'R'); }
+  function cartHasShop() { return [...cart.keys()].some(id => id[0] === 'S'); }
 
   function addToCart(id, qty = 1) {
-    const p = byId(id); if (!p) return;
-    cart.set(id, (cart.get(id) || 0) + qty);
-    updateCartUI();
-    toast(`«${p.name}» — в корзине`);
-    const b = $(`.add-btn[data-add="${id}"]`);
-    if (b) { b.classList.add('add-btn--added'); setTimeout(() => b.classList.remove('add-btn--added'), 1200); }
+    const p = byId(id);
+    if (!p) return;
+    if (p.src === 'shop' && qty > p.inStock) qty = p.inStock;
+    cart.set(id, Math.max(1, qty));
+    syncCartUI();
+    openDrawer('cart');
   }
 
-  function updateCartUI() {
-    const n = cartQty();
-    cartCount.textContent = n;
-    cartCount.hidden = n === 0;
-    if (n) cartCount.animate([{ transform: 'scale(1.4)' }, { transform: 'scale(1)' }], { duration: 250 });
-    if (drawer.classList.contains('is-open') && currentView === 'cart') renderCartView();
-    syncChatProductButtons();
+  function syncCartUI() {
+    const n = cartCount();
+    const el = $('#cartCount');
+    el.textContent = n;
+    el.hidden = n === 0;
+    renderCartView();
   }
 
   function renderCartView() {
-    const box = $('#cartItems');
-    if (!cart.size) {
-      box.innerHTML = '';
-      $('#cartEmpty').hidden = false;
-      $('#cartFoot').hidden = true;
-      return;
-    }
-    $('#cartEmpty').hidden = true;
-    $('#cartFoot').hidden = false;
-    $('#cartTotalQty').textContent = cartQty();
-    $('#cartSum').textContent = fmt(cartTotal());
-    const kd = kitDiscount();
-    const oldRow = $('#cartKitRow');
-    if (oldRow) oldRow.remove();
-    if (kd > 0) {
-      const row = document.createElement('div');
-      row.className = 'sum-row sum-row--kit';
-      row.id = 'cartKitRow';
-      row.innerHTML = `<span>Скидка за комплект −10%</span><b class="kit-sale">−${fmt(kd)}</b>`;
-      $('#cartSum').closest('.sum-row').after(row);
-    }
-    box.innerHTML = [...cart.entries()].map(([id, q]) => {
+    const list = $('#cartList');
+    const rows = [];
+    cart.forEach((qty, id) => {
       const p = byId(id);
-      return `<div class="cart-item" data-id="${id}">
-        <div class="cart-item__art">${productArt(p)}</div>
-        <div class="cart-item__info">
-          <span class="cart-item__name">${p.name}</span>
-          <span class="cart-item__artnum">арт. ${p.art}</span>
-          <div class="cart-item__row">
-            <span class="qty">
-              <button data-dec="${id}" type="button" aria-label="Меньше">−</button>
-              <span>${q}</span>
-              <button data-inc="${id}" type="button" aria-label="Больше">+</button>
-            </span>
-            <span class="cart-item__price">${fmt(p.price * q)}</span>
+      if (!p) return;
+      rows.push(`
+        <div class="d-item" data-id="${id}">
+          <div class="d-item__art">${productArt(p)}</div>
+          <div>
+            <div class="d-item__name">${p.name}</div>
+            <div class="d-item__sub ${p.src === 'remote' ? 'd-item__sub--order' : ''}">
+              ${p.src === 'shop' ? 'в наличии · ' + p.inStock + ' шт' : 'под заказ · 2–3 дня'} · ${fmt(p.price)}
+            </div>
+            <div class="d-item__ctrl">
+              <span class="d-item__qty">
+                <button data-dec aria-label="Меньше">−</button><b>${qty}</b><button data-inc aria-label="Больше">+</button>
+              </span>
+              <button class="d-item__del" data-del aria-label="Удалить">✕</button>
+            </div>
           </div>
-        </div>
-        <button class="cart-item__del" data-del="${id}" type="button">удалить</button>
-      </div>`;
-    }).join('');
+          <div class="d-item__sum">${fmt(p.price * qty)}</div>
+        </div>`);
+    });
+    list.innerHTML = rows.length ? rows.join('') :
+      `<p class="d-note" style="padding:24px 0">Корзина пуста. Загляните в каталог — товары двух складов попадают в один заказ.</p>`;
+
+    const total = cartTotal();
+    const parts = [];
+    if (cartHasShop()) parts.push('позиции магазина — выдача сегодня');
+    if (cartHasRemote()) parts.push('позиции под заказ — 2–3 дня');
+    $('#cartSummary').innerHTML = `
+      <div class="sum-row"><span>Товары (${cartCount()} шт)</span><b>${fmt(total)}</b></div>
+      ${parts.length ? `<div class="sum-row"><span>Состав заказа:</span><b>${parts.join(' · ')}</b></div>` : ''}
+      <div class="sum-row sum-row--total"><span>ИТОГО</span><b>${fmt(total)}</b></div>`;
+    $('#formSummary').innerHTML = $('#cartSummary').innerHTML;
+    $('#toFormBtn').disabled = cart.size === 0;
   }
 
-  $('#cartItems').addEventListener('click', e => {
-    const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]'), del = e.target.closest('[data-del]');
-    if (inc) { const id = inc.dataset.inc; cart.set(id, cart.get(id) + 1); updateCartUI(); renderCartView(); }
-    if (dec) { const id = dec.dataset.dec; const q = cart.get(id) - 1; q <= 0 ? cart.delete(id) : cart.set(id, q); updateCartUI(); renderCartView(); }
-    if (del) { cart.delete(del.dataset.del); updateCartUI(); renderCartView(); }
-  });
-
-  /* ── полка: виды ── */
-  let currentView = 'cart';
-  const views = { cart: $('#viewCart'), form: $('#viewForm'), done: $('#viewDone') };
-  const titles = { cart: 'Корзина', form: 'Оформление заказа', done: 'Заказ принят' };
-
-  function setView(v) {
-    currentView = v;
-    Object.entries(views).forEach(([k, el]) => el.hidden = k !== v);
-    $('#drawerTitle').textContent = titles[v];
-    if (v === 'cart') renderCartView();
-    if (v === 'form') renderMiniOrder();
+  /* ══════════ СПЕЦИФИКАЦИЯ (документ заказа) ══════════ */
+  function buildSpec(name, phone, comment, delivery, pay) {
+    const lines = [];
+    cart.forEach((qty, id) => {
+      const p = byId(id);
+      if (!p) return;
+      lines.push({
+        name: p.name, art: p.art, src: p.src === 'shop' ? 'Магазин' : 'Удалённый склад',
+        qty, price: p.price, sum: p.price * qty,
+      });
+    });
+    return {
+      num: orderNum,
+      date: new Date().toLocaleString('ru-RU'),
+      buyer: { name, phone, comment: comment || '—' },
+      delivery, pay,
+      items: lines,
+      total: cartTotal(),
+    };
   }
+
+  function specHTML(spec, compact = false) {
+    const rows = spec.items.map(l => `
+      <div class="sum-row"><span>${l.name} <small style="color:var(--muted)">${l.art} · ${l.src}</small> × ${l.qty}</span><b>${fmt(l.sum)}</b></div>`).join('');
+    return `
+      <div class="spec-title">СПЕЦИФИКАЦИЯ № ${spec.num}</div>
+      ${rows}
+      <div class="sum-row"><span>Доставка</span><b>${spec.delivery}</b></div>
+      <div class="sum-row"><span>Оплата</span><b>${spec.pay}</b></div>
+      ${compact ? '' : `
+      <div class="sum-row"><span>Покупатель</span><b>${spec.buyer.name}</b></div>
+      <div class="sum-row"><span>Телефон</span><b>${spec.buyer.phone}</b></div>
+      <div class="sum-row"><span>Комментарий</span><b>${spec.buyer.comment}</b></div>`}
+      <div class="sum-row sum-row--total"><span>ИТОГО</span><b>${fmt(spec.total)}</b></div>`;
+  }
+
+  /* ══════════ МОДАЛКА ТОВАРА ══════════ */
+  let modalId = null;
+  function openProduct(id) {
+    const p = byId(id);
+    if (!p) return;
+    modalId = id;
+    const src = SOURCES[p.src];
+    $('#pmSrc').textContent = src.label + ' · ' + src.tag;
+    $('#pmSrc').className = 'modal__src' + (p.src === 'remote' ? ' modal__src--remote' : '');
+    $('#pmName').textContent = p.name;
+    $('#pmArtCode').textContent = 'Артикул: ' + p.art + (p.char ? ' · характеристика: ' + p.char : '');
+    $('#pmDesc').textContent = p.src === 'shop'
+      ? `Позиция с собственного склада (${Shop.state.meta.shop.warehouse || 'магазин'}). Остаток синхронизирован с 1С — по этому количеству можно оформить выдачу сегодня.`
+      : `Позиция с удалённого склада поставщика. Привозим под заказ 2–3 дня, опт поставщика ${p.wholesale ? fmt(p.wholesale) : 'по запросу'}. Наличие поставщика обновляется парсером каталога.`;
+    $('#pmPrice').textContent = fmt(p.price);
+    const st = $('#pmStock');
+    if (p.src === 'shop') {
+      st.className = 'modal__stock';
+      st.innerHTML = `В наличии: <b>${p.inStock} шт</b> · выдача сегодня`;
+      $('#pmQty').max = p.inStock;
+    } else {
+      st.className = 'modal__stock modal__stock--order';
+      st.innerHTML = `<b>Под заказ</b> · 2–3 дня`;
+      $('#pmQty').max = 999;
+    }
+    $('#pmQty').value = 1;
+    $('#pmFacts').innerHTML = [
+      p.src === 'shop' ? 'Остаток из 1С: «Остатки и доступность товаров»' : 'Номенклатура поставщика rossimvol.ru',
+      p.src === 'shop' ? 'Самовывоз — сегодня после подтверждения' : 'Объединяется в одном заказе с товарами магазина',
+      'Гравировка и заполнение грамот — по запросу',
+    ].map(t => `<li>${t}</li>`).join('');
+    $('#pmArt').innerHTML = productArt(p);
+    $('#productModal').hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    $('#productModal').hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  /* ══════════ DRAWER ══════════ */
   function openDrawer(view = 'cart') {
     closeChat();
-    drawer.setAttribute('aria-hidden', 'false');
-    drawer.classList.add('is-open');
-    overlay.hidden = false;
-    requestAnimationFrame(() => overlay.classList.add('is-open'));
+    const views = { cart: 'viewCart', form: 'viewForm', done: 'viewDone' };
+    Object.values(views).forEach(id => $('#' + id).hidden = id !== views[view]);
+    $('#drawerTitle').textContent = view === 'form' ? 'ОФОРМЛЕНИЕ' : view === 'done' ? 'ГОТОВО' : 'КОРЗИНА';
+    $('#drawer').hidden = false;
     document.body.style.overflow = 'hidden';
-    setView(view);
+    renderCartView();
   }
   function closeDrawer() {
-    drawer.classList.remove('is-open');
-    drawer.setAttribute('aria-hidden', 'true');
-    overlay.classList.remove('is-open');
-    setTimeout(() => overlay.hidden = true, 240);
+    $('#drawer').hidden = true;
     document.body.style.overflow = '';
   }
-  $('#cartBtn').addEventListener('click', () => openDrawer('cart'));
-  $('#drawerClose').addEventListener('click', closeDrawer);
-  overlay.addEventListener('click', closeDrawer);
-  $('#toCheckoutBtn').addEventListener('click', () => setView('form'));
-  $('#backToCartBtn').addEventListener('click', () => setView('cart'));
 
-  function miniRows() {
-    const kd = kitDiscount();
-    return [...cart.entries()].map(([id, q]) => {
-      const p = byId(id);
-      return `<div class="mini-order__row"><span>${p.name} × ${q}</span><span>${fmt(p.price * q)}</span></div>`;
-    }).join('') + (kd > 0 ? `<div class="mini-order__row"><span>Скидка за комплект −10%</span><span class="kit-sale">−${fmt(kd)}</span></div>` : '');
-  }
-  function renderMiniOrder() {
-    $('#miniOrder').innerHTML = miniRows() +
-      `<div class="mini-order__total"><span>Итого</span><span>${fmt(cartTotal())}</span></div>`;
-  }
-
-  /* ── отправка заказа ── */
-  let lastOrderTotal = 0;
-  $('#orderForm').addEventListener('submit', e => e.preventDefault());
-  $('#submitOrderBtn').addEventListener('click', () => {
-    const f = $('#orderForm');
-    const name = f.name.value.trim(), phone = f.phone.value.trim();
-    const ok = name.length >= 2 && phone.replace(/\D/g, '').length >= 10;
-    $('#formError').hidden = ok;
-    if (!ok) { (!name ? f.name : f.phone).focus(); return; }
-
-    orderNum = 'НД-' + String(Math.floor(1000 + Math.random() * 9000));
-    lastOrderTotal = cartTotal();
-    $('#orderNumber').textContent = '№ ' + orderNum;
-    $('#doneOrder').innerHTML = `<div class="done__order-head">Состав заказа — ${cartQty()} шт. на ${fmt(lastOrderTotal)}</div>` + miniRows();
-    setView('done');
-  });
-  $('#payLinkBtn').addEventListener('click', () =>
-    toast('Демо: здесь будет ссылка на онлайн-оплату (карта / СБП)'));
-  $('#doneCloseBtn').addEventListener('click', () => {
-    const steps = brain.orderConfirmed(orderNum, lastOrderTotal);
-    cart.clear(); updateCartUI();
-    closeDrawer();
-    if (chatOpened) runSteps(steps);
-  });
-
-  /* ══════════ ТОСТ ══════════ */
-  let toastTimer;
-  function toast(msg) {
-    let el = $('.toast');
-    if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
-    el.textContent = msg;
-    el.classList.add('is-on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('is-on'), 2200);
-  }
-
-  /* ══════════ ЧАТ С МЕДАЛЬКИНЫМ ══════════ */
-  const chatEl = $('#chatPanel'), chatLog = $('#chatLog'), chatChips = $('#chatChips');
-  const chatInput = $('#chatInput');
-
+  /* ══════════ ЧАТ ══════════ */
   function openChat() {
-    if (drawer.classList.contains('is-open')) closeDrawer();
-    chatEl.classList.add('is-open');
-    chatEl.setAttribute('aria-hidden', 'false');
-    $('#fabDot').hidden = true;
-    document.body.style.overflow = 'hidden';
+    closeDrawer();
+    $('#chat').hidden = false;
     if (!chatOpened) {
       chatOpened = true;
-      runSteps(brain.greet());
+      const g = brain.greet();
+      botSay(g.text, null, null, g.chips);
     }
-    setTimeout(() => chatInput.focus(), 350);
+    $('#chatInput').focus();
   }
-  function closeChat() {
-    chatEl.classList.remove('is-open');
-    chatEl.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+  function closeChat() { $('#chat').hidden = true; }
+
+  function chatScroll() { const log = $('#chatLog'); log.scrollTop = log.scrollHeight; }
+  function addMsg(html, who = 'bot') {
+    const log = $('#chatLog');
+    const div = document.createElement('div');
+    div.className = `msg msg--${who}`;
+    div.innerHTML = html;
+    log.appendChild(div);
+    chatScroll();
+    return div;
   }
-  $('#mascotFab').addEventListener('click', () =>
-    chatEl.classList.contains('is-open') ? closeChat() : openChat());
-  $('#chatClose').addEventListener('click', closeChat);
-  $('#heroAskBtn').addEventListener('click', openChat);
-
-  setTimeout(() => { if (!chatOpened) $('#fabDot').hidden = false; }, 4000);
-
-  function scrollLog() { chatLog.scrollTop = chatLog.scrollHeight; }
-
-  function addUserMsg(text) {
-    const d = document.createElement('div');
-    d.className = 'msg msg--user';
-    d.textContent = text;
-    chatLog.appendChild(d); scrollLog();
-  }
-
-  function addBotHtml(html) {
-    const d = document.createElement('div');
-    d.className = 'msg msg--bot';
-    d.innerHTML = html;
-    chatLog.appendChild(d); scrollLog();
-    return d;
-  }
-
-  function addProductCard(p) {
-    const d = document.createElement('div');
-    d.className = 'msg-product';
-    d.innerHTML = `
-      <div class="msg-product__art">${productArt(p)}</div>
-      <div class="msg-product__info">
-        <div class="msg-product__name">${p.name}</div>
-        <div class="msg-product__meta">${CATS[p.cat].label} · арт. ${p.art}</div>
-        <div class="msg-product__row">
-          <span class="msg-product__price">${fmt(p.price)}</span>
-          <button class="msg-product__add" data-chat-add="${p.id}" type="button">В корзину</button>
-        </div>
-      </div>`;
-    chatLog.appendChild(d); scrollLog();
-  }
-
-  function addOrderCard() {
-    const d = document.createElement('div');
-    d.className = 'msg-order';
-    if (!cart.size) {
-      d.innerHTML = `<div class="msg-order__title">Корзина пока пуста</div>
-        <div class="msg-order__row"><span>Добавьте позиции из моих подборок — и я соберу заказ.</span></div>`;
-    } else {
-      d.innerHTML = `<div class="msg-order__title">🏅 Ваш заказ</div>
-        ${miniRows()}
-        <div class="msg-order__total"><span>Итого</span><span>${fmt(cartTotal())}</span></div>
-        <div class="msg-order__cta"><button class="btn btn--gold btn--wide" data-checkout type="button">Подтвердить и оформить</button></div>`;
+  async function botSay(text, cards, orderHTML, chips) {
+    const t = addMsg('<i></i><i></i><i></i>', 'bot typing');
+    await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
+    t.remove();
+    if (text) addMsg(text);
+    if (cards) for (const c of cards) {
+      const p = byId(c.id);
+      if (!p) continue;
+      addMsg(`
+        <div class="msg-product" data-id="${p.id}">
+          <div class="msg-product__art">${productArt(p)}</div>
+          <div><div class="msg-product__name">${p.name}</div>
+          <div class="msg-product__sub ${p.src === 'remote' ? 'msg-product__sub--order' : ''}">${p.src === 'shop' ? 'в наличии ' + p.inStock + ' шт' : 'под заказ 2–3 дня'}</div></div>
+          <div class="msg-product__price">${fmt(p.price)}</div>
+        </div>`);
     }
-    chatLog.appendChild(d); scrollLog();
+    if (orderHTML) addMsg(orderHTML, 'bot msg-order-wrap');
+    if (chips) setChips(chips);
+    chatScroll();
+  }
+  function setChips(list) {
+    $('#chatChips').innerHTML = (list || []).map(c => `<button class="chip" data-chip="${c}">${c}</button>`).join('');
   }
 
-  function setChips(items) {
-    chatChips.innerHTML = (items || []).map(c => `<button class="chip" type="button">${c}</button>`).join('');
-  }
-
-  function typing(on) {
-    let el = $('.typing');
-    if (on) {
-      if (el) return;
-      el = document.createElement('div');
-      el.className = 'msg msg--bot typing';
-      el.innerHTML = '<i></i><i></i><i></i>';
-      chatLog.appendChild(el); scrollLog();
-      $$('.mascot--chat').forEach(m => m.classList.add('is-speaking'));
-    } else {
-      el && el.remove();
-      $$('.mascot--chat').forEach(m => m.classList.remove('is-speaking'));
+  async function send(text) {
+    if (!text.trim()) return;
+    addMsg(text.replace(/</g, '&lt;'), 'user');
+    const r = brain.handle(text);
+    /* черновик спецификации из чата кладём в корзину, чтобы покупатель
+       продолжил оформление (доставка/оплата/контакты) в едином флоу */
+    if (r.order && r.products) {
+      cart.clear();
+      r.products.forEach(p => cart.set(p.id, 1));
+      syncCartUI();
     }
+    if (text.includes('Открыть корзину')) { openDrawer('cart'); return; }
+    await botSay(r.text, r.products, r.order ? msgOrderHTML(r.order) : null, r.chips);
+  }
+  function msgOrderHTML(order) {
+    return `<div class="msg-order"><h5>СПЕЦИФИКАЦИЯ · ЧЕРНОВИК</h5>
+      <ul>${order.items.map(l => `<li>${l.name} × ${l.qty} — ${fmt(l.sum)}</li>`).join('')}</ul>
+      <div class="sum-row sum-row--total"><span>ИТОГО</span><b>${fmt(order.total)}</b></div>
+      <p style="margin:8px 0 0;font-size:12px;color:var(--muted)">Продолжите оформление в корзине — выберите доставку, оплату и оставьте контакты. Заказ уйдёт сотруднику в оформленной форме.</p></div>`;
   }
 
-  function runSteps(steps) {
-    setChips([]);
-    let i = 0;
-    const delay = () => 550 + Math.random() * 450;
-    const next = () => {
-      if (i >= steps.length) return;
-      const s = steps[i++];
-      if (s.type === 'text') {
-        typing(true);
-        setTimeout(() => { typing(false); addBotHtml(s.html); next(); }, s.html.length > 120 ? 1100 : delay());
-      } else if (s.type === 'products') {
-        typing(true);
-        setTimeout(() => {
-          typing(false);
-          s.items.forEach(p => addProductCard(p));
-          syncChatProductButtons();
-          next();
-        }, 900);
-      } else if (s.type === 'order') {
-        typing(true);
-        setTimeout(() => { typing(false); addOrderCard(); next(); }, 800);
-      } else if (s.type === 'chips') {
-        setChips(s.items);
-      } else if (s.type === 'action' && s.name === 'addAll') {
-        s.ids.forEach(id => addToCartSilent(id, s.qty || 1));
-        updateCartUI();
-        next();
-      } else if (s.type === 'mood' && s.happy) {
-        const m = $('#chatMascot');
-        m.classList.add('is-happy');
-        setTimeout(() => m.classList.remove('is-happy'), 2500);
-        next();
-      } else next();
-    };
-    next();
-  }
-
-  function addToCartSilent(id, qty) { cart.set(id, (cart.get(id) || 0) + qty); }
-
-  function syncChatProductButtons() {
-    $$('.msg-product__add').forEach(b => {
-      const id = b.dataset.chatAdd;
-      const inCart = cart.has(id);
-      b.textContent = inCart ? `В корзине${cart.get(id) > 1 ? ' · ' + cart.get(id) : ''}` : 'В корзину';
-      b.classList.toggle('is-in', inCart);
+  /* ══════════ СОБЫТИЯ ══════════ */
+  function bind() {
+    /* глобальные клики */
+    document.addEventListener('click', e => {
+      const open = e.target.closest('[data-open]');
+      if (open) { open.dataset.open === 'cart' ? openDrawer('cart') : null; }
+      if (e.target.closest('[data-open-chat]')) { openChat(); return; }
+      if (e.target.closest('[data-close-chat]')) { closeChat(); return; }
+      if (e.target.closest('[data-close]')) {
+        if ($('#productModal').contains(e.target)) closeModal();
+        else closeDrawer();
+        return;
+      }
+      if (e.target.closest('#pmAdd')) {
+        const qty = Math.max(1, +$('#pmQty').value || 1);
+        addToCart(modalId, qty);
+        closeModal();
+        return;
+      }
+      const card = e.target.closest('.p-card');
+      if (card && card.dataset.id) { openProduct(card.dataset.id); return; }
+      const mp = e.target.closest('.msg-product');
+      if (mp) { openProduct(mp.dataset.id); return; }
+      const chip = e.target.closest('[data-chip]');
+      if (chip) { send(chip.dataset.chip); return; }
+      /* корзина: qty/del */
+      const item = e.target.closest('.d-item');
+      if (item) {
+        const id = item.dataset.id;
+        if (e.target.closest('[data-inc]')) { cart.set(id, cart.get(id) + 1); syncCartUI(); }
+        if (e.target.closest('[data-dec]')) { const q = cart.get(id) - 1; q <= 0 ? cart.delete(id) : cart.set(id, q); syncCartUI(); }
+        if (e.target.closest('[data-del]')) { cart.delete(id); syncCartUI(); }
+      }
     });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (!$('#productModal').hidden) closeModal();
+        else if (!$('#drawer').hidden) closeDrawer();
+        else closeChat();
+      }
+    });
+
+    $('#toFormBtn').addEventListener('click', () => openDrawer('form'));
+
+    $('#orderForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      orderNum = 'Р-' + String(Math.floor(1000 + Math.random() * 9000));
+      const spec = buildSpec(fd.get('name'), fd.get('phone'), fd.get('comment'),
+        fd.get('delivery'), fd.get('pay'));
+      /* демо: спецификация — готовый документ для сотрудника */
+      console.log('=== СПЕЦИФИКАЦИЯ ДЛЯ СОТРУДНИКА (передать в 1С) ===');
+      console.log(JSON.stringify(spec, null, 2));
+      $('#doneSpec').innerHTML = specHTML(spec);
+      openDrawer('done');
+      cart.clear();
+      syncCartUI();
+    });
+
+    $('#chatForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const inp = $('#chatInput');
+      send(inp.value);
+      inp.value = '';
+    });
+
+    /* маскот в шапке агента и на кнопке */
+    $('#fabMedal').innerHTML = mascotSVG({ size: 44 });
+    $('#chatAvatar').innerHTML = mascotSVG({ size: 40 });
+    const stripMascot = document.querySelector('.agent-strip__mascot');
+    if (stripMascot) stripMascot.innerHTML = mascotSVG({ size: 72 });
   }
 
-  chatChips.addEventListener('click', e => {
-    const c = e.target.closest('.chip');
-    if (!c) return;
-    send(c.textContent);
+  /* ══════════ ЗАПУСК ══════════ */
+  document.addEventListener('DOMContentLoaded', async () => {
+    brain = new MedalkinBrain(allGoods);
+    bind();
+    Shop.bindEvents();
+    await Shop.init();
+    brain.setGoods(allGoods);   // после загрузки JSON — свежие данные в мозг
+    syncCartUI();
+    setChips(['Что есть в наличии?', 'Нужны кубки на хоккей', 'Бюджет 15000 на медали', 'Как заказать?']);
   });
 
-  function send(text) {
-    text = text.trim();
-    if (!text) return;
-    addUserMsg(text);
-    setChips([]);
-    typing(true);
-    setTimeout(() => {
-      typing(false);
-      const steps = brain.handle(text);
-      runSteps(steps);
-    }, 700);
-  }
-
-  $('#chatForm').addEventListener('submit', e => {
-    e.preventDefault();
-    send(chatInput.value);
-    chatInput.value = '';
-  });
-
-  /* клики внутри чата: добавить товар / оформить */
-  chatLog.addEventListener('click', e => {
-    const add = e.target.closest('[data-chat-add]');
-    if (add) { addToCart(add.dataset.chatAdd); return; }
-    if (e.target.closest('[data-checkout]')) openDrawer('form');
-  });
-
-  /* ══════════ старт ══════════ */
-  renderTabs();
-  renderGrid();
-  renderKits();
-  updateCartUI();
+  return { openProduct, addToCart, openDrawer, openChat, send };
 })();

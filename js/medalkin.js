@@ -1,279 +1,211 @@
 /* ═══════════════════════════════════════════════════
-   Медалькин — мозг ИИ-консультанта (MVP-логика)
-   Модуль не зависит от DOM: та же логика переносится
-   в бота мессенджера MAX на следующем этапе.
+   Медалькин — диалоговый движок агента-консультанта.
+   Класс не зависит от DOM: тот же код переносится в
+   бота MAX (вход parse/handle, выход — реплика + товары).
+   Знает два склада: shop (магазин, остатки 1С) и
+   remote (поставщик, под заказ).
    ═══════════════════════════════════════════════════ */
 
 class MedalkinBrain {
-
-  constructor(products) {
-    this.products = products;
-    this.reset();
-  }
-
-  reset() {
-    this.ctx = { cat: null, themes: new Set(), budget: null, qty: null, perUnit: null };
-    this.lastSuggestions = [];
+  constructor(goods = []) {
+    this.goods = goods;
     this.shown = new Set();
-    this.offset = 0;
-    this.met = false;
+    this.pending = null;      // {cat, theme, budget, qty}
+    this.order = null;        // черновик спецификации
   }
 
-  /* формат денег — внутри модуля, чтобы логика жила без data.js */
-  money(n) {
-    return n.toLocaleString('ru-RU') + ' ₽';
-  }
+  setGoods(goods) { this.goods = goods; }
 
-  /* ── разбор сообщения ── */
+  money(n) { return n.toLocaleString('ru-RU') + ' ₽'; }
+
+  /* ── разбор запроса ── */
   parse(text) {
-    const t = ' ' + text.toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim() + ' ';
-    const r = { raw: text.toLowerCase().trim() };
+    const t = text.toLowerCase();
+    const r = { cat: null, theme: null, budget: null, qty: null, order: false,
+      stock: false, photo: false, price: false, hello: false, bye: false,
+      thanks: false, who: false, help: false, delivery: false, engrave: false, payment: false };
 
-    r.hello     = /(^|\s)(привет|здравствуй|добрый день|добрый вечер|доброе утро|хай|hello)(\s|!|,|\.)/.test(t);
-    r.thanks    = /спасибо|благодар/.test(t);
-    r.bye       = /(^|\s)пока(\s|!|$)|до свидания/.test(t);
-    r.help      = /помоги|помощь|не знаю|что посовету|подскажи|совет/.test(t);
-    r.order     = /оформ|заказ|корзин|купи|покуп/.test(t);
-    r.delivery  = /доставк|самовывоз|курьер|когда.*получ|сроки/.test(t);
-    r.engrave   = /гравир|нанесен|печать|макет|надпис|логотип|имена/.test(t);
-    r.payment   = /оплат|сбп|картой|ссылк.*оплат/.test(t);
-    r.max       = /max|макс\b|мессендж/.test(t);
-    r.who       = /кто ты|ты кто|как тебя зовут/.test(t);
-    r.yes       = /(^|\s)(да|конечно|давай|хочу|подходит|согласен|ок|окей|отлично|супер)(\s|!|\.)/.test(t);
-    r.more      = /еще|другие|другие варианты|покажи еще|не подходят|не то/.test(t);
-    r.addAll    = /добав|в корзину|взял/.test(t);
-    r.kit       = /комплект|набор/.test(t);
+    if (/(^|\s)(привет|здравствуй|добрый\s*(день|вечер|утро)|хай|доброе\s*утро|ку\b)/.test(t)) r.hello = true;
+    if (/(пока|до связи|всего доброго|до свидания)\b/.test(t)) r.bye = true;
+    if (/(спасибо|благодар)/.test(t)) r.thanks = true;
+    if (/(кто ты|ты кто|что ты умеешь|как тебя зовут|ты бот|ты человек)/.test(t)) r.who = true;
+    if (/(помощь|help|что можно|как пользоваться|как заказать|как оформить|не знаю)/.test(t)) r.help = true;
+    if (/(доставк|самовывоз|курьер|сдэк|почтой|транспорт)/.test(t)) r.delivery = true;
+    if (/(гравир|надпис|текст на|фамили|имя на)/.test(t)) r.engrave = true;
+    if (/(оплат|наличн|картой|счёт|счет|безнал|юр\.?\s*лиц)/.test(t)) r.payment = true;
 
-    // категория
+    if (/(наличи|что есть|в наличии|склад|складе|остатк|есть ли)/.test(t)) r.stock = true;
+    if (/(фото|фотк|картин|посмотреть|покажи|скинь|пришли|глянь|взгля)/.test(t)) r.photo = true;
+    if (/(цена|цены|стоим|почём|почем|сколько стоит|прайс)/.test(t)) r.price = true;
+
+    if (/(заказ|оформи|купить|хочу заказать|давай заказ|собери заказ|спецификац)/.test(t) && !/под заказ/.test(t)) r.order = true;
+
     if (/медал/.test(t)) r.cat = 'medal';
-    else if (/грамот|диплом|благодарн|сертификат/.test(t)) r.cat = 'gramota';
-    else if (/куб|трофе|статуэт/.test(t)) r.cat = 'cup';
+    else if (/(грамот|диплом|благодарн|сертификат)/.test(t)) r.cat = 'gramota';
+    else if (/(куб|трофе|статуэт)/.test(t)) r.cat = 'cup';
 
-    // темы
-    r.themes = [];
-    if (/футбол/.test(t)) r.themes.push('football');
-    if (/хокке/.test(t)) r.themes.push('hockey');
-    if (/шахмат/.test(t)) r.themes.push('chess');
-    if (/школ|учеб|учеб|олимпиад|урок|родител|садик|знани/.test(t)) r.themes.push('school');
-    if (/детск|сад|малыш|юн[ыо]|детей|ребят/.test(t)) r.themes.push('kids');
-    if (/сотрудн|коллектив|корпорат|офис|бизнес|компани|партнер/.test(t)) r.themes.push('office');
-    if (/9 *мая|день побед|ветеран/.test(t)) r.themes.push('may9');
-    if (/победител|1 *место|первое место|2 *место|второе место|3 *место|третье место|призер|чемпион|пьедестал/.test(t)) r.themes.push('victory');
-    if (/спорт/.test(t)) r.themes.push('universal');
+    if (/(хокке)/.test(t)) r.theme = 'hockey';
+    else if (/(футбол)/.test(t)) r.theme = 'football';
+    else if (/(шахмат)/.test(t)) r.theme = 'chess';
+    else if (/(волейбол)/.test(t)) r.theme = 'volleyball';
+    else if (/(бег|марафон|лыж|спартак)/.test(t)) r.theme = 'run';
+    else if (/(школ|учени|знани|олимпиад)/.test(t)) r.theme = 'school';
+    else if (/(9\s*мая|день побед|ветеран)/.test(t)) r.theme = 'may9';
+    else if (/(1\s*место|победител|чемпион|призёр|призер)/.test(t)) r.theme = 'victory';
+    if (/(детск|сад|малыш|юн[ыо])/.test(t)) r.theme = 'kids';
 
-    // бюджет: «до 500 руб», «бюджет 10000 ₽», «не дороже 200р»
-    const bm = t.match(/(?:бюджет|до|не дороже|максимум|в пределах)?\s*(\d[\d ]{1,9})\s*(руб|₽|р\.|р\b)/);
-    if (bm) r.budget = parseInt(bm[1].replace(/ /g, ''), 10);
-
-    // тираж: «30 штук», «нужно 50 медалей», «тираж 100»
-    const qm = t.match(/(\d[\d ]{0,9})\s*(шт|тираж|позиц|комплект|медал|грамот|куб|диплом)/);
-    if (qm && parseInt(qm[1].replace(/ /g, ''), 10) > 1) r.qty = parseInt(qm[1].replace(/ /g, ''), 10);
-
+    const bm = t.match(/(?:бюджет|до|не дороже|максимум|в пределах)\s*(\d[\d\s]{1,9})\s*(руб|₽|тыс|т\.?р|р\.|\b)/);
+    if (bm) {
+      let v = +bm[1].replace(/\s/g, '');
+      if (/(тыс|т\.?р)/.test(bm[2])) v *= 1000;
+      r.budget = v;
+    } else {
+      const m2 = t.match(/(\d[\d\s]{2,9})\s*(руб|₽)\b/);
+      if (m2) r.budget = +m2[1].replace(/\s/g, '');
+    }
+    const qm = t.match(/(\d{1,5})\s*(шт|тираж|позиц|комплект|медал|грамот|куб|диплом)/);
+    if (qm) r.qty = +qm[1];
     return r;
   }
 
-  /* ── подбор товаров ── */
-  recommend() {
-    const { cat, themes, perUnit, budget } = this.ctx;
-    const limit = perUnit || budget;
-    let pool = this.products.filter(p => !cat || p.cat === cat);
-    if (themes.size) {
-      const themed = pool.filter(p => p.themes.some(x => themes.has(x)));
-      if (themed.length) pool = themed;
+  /* ── поиск по критериям ── */
+  score(p) {
+    let s = 0;
+    if (this.pending) {
+      const { cat, theme, budget } = this.pending;
+      if (cat && p.cat === cat) s += 3;
+      if (theme) s += p.theme === theme ? 2 : (p.theme === 'universal' ? 0.4 : -0.6);
+      if (budget) {
+        if (p.price <= budget) s += 1.5; else s -= (p.price - budget) / Math.max(budget, 1) * 2;
+      }
     }
-    let fits = limit ? pool.filter(p => p.price <= limit) : pool;
-    if (!fits.length && pool.length) fits = pool; // бюджет не бьётся — честно скажем ниже
-    const scored = fits.map(p => ({
-      p,
-      score: p.themes.reduce((s, x) => s + (themes.has(x) ? (x === 'universal' ? 0.5 : 2) : 0), 0)
-            + (p.badge === 'hit' ? 1 : 0) + (p.badge === 'new' ? .5 : 0),
-    })).sort((a, b) => b.score - a.score || a.p.price - b.p.price);
-    const slice = scored.slice(this.offset, this.offset + 3).map(x => x.p);
-    this.offset += 3;
-    return { items: slice, total: scored.length, overBudget: !!(limit && fits[0] && fits.every(p => p.price > limit)) };
+    if (p.src === 'shop') s += 0.6;              // наличие в магазине — приоритет
+    if (p.inStock > 20) s += 0.6;
+    if (p.img) s += 0.3;                          // с фото — привлекательнее
+    return s + p.pop * 0.05;
   }
 
-  /* ── ответ на сообщение: массив шагов ── */
-  handle(rawText) {
-    const r = this.parse(rawText);
-    const ctx = this.ctx;
-    const out = [];
-    const text = html => out.push({ type: 'text', html });
-    this.met = true;
+  recommend(k = 4) {
+    const pool = this.goods.filter(p => !this.shown.has(p.id))
+      .sort((a, b) => this.score(b) - this.score(a));
+    const pick = pool.slice(0, k);
+    pick.forEach(p => this.shown.add(p.id));
+    return pick;
+  }
 
-    // запоминаем уточнения
-    if (r.cat) ctx.cat = r.cat;
-    r.themes.forEach(x => ctx.themes.add(x));
-    if (r.budget) ctx.budget = r.budget;
-    if (r.qty) ctx.qty = r.qty;
-    if (r.budget && r.qty) ctx.perUnit = Math.max(3, Math.floor(r.budget / r.qty));
-    // новый запрос — начинаем подбор с чистого листа
-    if (r.cat || r.themes.length) { this.shown = new Set(); this.offset = 0; }
+  topStock(k = 4) {
+    return this.goods.filter(p => p.src === 'shop')
+      .sort((a, b) => b.inStock - a.inStock).slice(0, k);
+  }
 
-    /* специальные вопросы */
-    if (r.who) {
-      text('Я Медалькин — ИИ-консультант «Наградного магазина» 🏅 Знаю весь ассортимент: медали, грамоты и кубки. Расскажите, какое мероприятие готовите — соберу корзину за минуту.');
-      out.push({ type: 'chips', items: ['Школьный турнир', 'Спортивные соревнования', 'Награждение сотрудников', 'Кубок на финал'] });
-      return out;
+  withPhoto(k = 4) {
+    const wantCat = this.pending?.cat || null;
+    let list = this.goods.filter(p => p.img && (!wantCat || p.cat === wantCat))
+      .sort((a, b) => (b.src === 'shop') - (a.src === 'shop') || b.inStock - a.inStock);
+    /* у магазина реальные фото есть не у всех позиций — добираем ходовыми
+       товарами с иллюстрациями, чтобы ответ был всегда содержательным */
+    if (list.length < k) {
+      const extra = this.goods.filter(p => !p.img && (!wantCat || p.cat === wantCat))
+        .sort((a, b) => b.inStock - a.inStock);
+      list = list.concat(extra.slice(0, k - list.length));
     }
-    if (r.max) {
-      text('Скоро я появлюсь и в мессенджере MAX: там же подберу товар, покажу фото с сайта, оформлю заказ и пришлю ссылку на оплату. А пока — я здесь, на сайте.');
-      out.push({ type: 'chips', items: ['Подобрать награды'] });
-      return out;
-    }
-    if (r.delivery) {
-      text('Доставка: самовывоз из магазина, курьер по городу — в день заказа, в регионы — 1–7 рабочих дней. Награды приедут уже с нанесением.');
-      out.push({ type: 'chips', items: ['Подобрать награды', 'Оформить заказ'] });
-      return out;
-    }
-    if (r.engrave) {
-      text('Нанесение — наша специальность: гравировка на кубках, УФ-печать на грамотах, тиснение на медальных футлярах. Текст и макет менеджер согласует с вами после заказа — до оплаты.');
-      out.push({ type: 'chips', items: ['Подобрать награды', 'Оформить заказ'] });
-      return out;
-    }
-    if (r.payment) {
-      text('Оплата — по ссылке: после подтверждения заказа пришлём ссылку на онлайн-оплату картой или по СБП. В этом демо кнопка появится на финальном экране заказа.');
-      out.push({ type: 'chips', items: ['Оформить заказ', 'Подобрать награды'] });
-      return out;
-    }
-    if (r.thanks) {
-      this.met && text('Рад помочь! Если понадобится ещё — я рядом. Удачного награждения! 🏅');
-      out.push({ type: 'chips', items: ['Оформить заказ', 'Подобрать награды'] });
-      return out;
-    }
-    if (r.bye) {
-      text('До встречи! Возвращайтесь, когда соберёте следующий турнир 👋');
-      return out;
+    return list.slice(0, k);
+  }
+
+  /* ── сборка заказа-черновика ── */
+  buildOrder(list) {
+    const items = list.map(p => ({ name: p.name, art: p.art, qty: 1, price: p.price, sum: p.price, src: p.src }));
+    return { items, total: items.reduce((s, i) => s + i.sum, 0) };
+  }
+
+  /* ── главная точка входа ── */
+  handle(text) {
+    const r = this.parse(text);
+
+    if (r.who) return this.say('Я Медалькин — агент-консультант магазина «РАСПОРТ». Подбираю награды под задачу и бюджет, показываю наличие магазина и удалённого склада поставщика, собираю заказ со спецификацией. Просто напишите: «нужны медали и кубки на турнир, бюджет 20000».');
+
+    if (r.delivery) return this.say('Доставка: самовывоз со склада магазина — сегодня после подтверждения; курьер по городу — 1 день; СДЭК и другие ТК — 2–5 дней. Позиции под заказ приезжают от поставщика за 2–3 дня и уходят в тот же заказ.');
+    if (r.engrave) return this.say('Гравировка — делаем: имена на медалях, надписи на кубках, заполнение грамот по вашему списку. Укажите текст при оформлении в комментарии к заказу, менеджер согласует макет.');
+    if (r.payment) return this.say('Оплата: наличными или картой при получении, а для организаций — счёт. В комментарии к заказу укажите реквизиты — подготовим документы.');
+
+    if (r.stock) {
+      this.pending = { cat: r.cat, theme: r.theme, budget: r.budget };
+      const list = (r.cat || r.theme || r.budget) ? this.recommend(4) : this.topStock(4);
+      const n = this.goods.filter(p => p.src === 'shop').length;
+      return this.say(`В магазине сейчас ${n} позиций (данные из 1С). Вот что есть в большом количестве:`, list, ['А что под заказ?', 'Нужны кубки', 'Бюджет 15000']);
     }
 
-    /* заказ */
+    if (r.photo) {
+      this.pending = { cat: r.cat, theme: r.theme, budget: r.budget };
+      const list = this.withPhoto(4);
+      const what = r.cat === 'cup' ? 'кубков' : r.cat === 'gramota' ? 'грамот' : 'медалей';
+      return this.say(`Вот фото ${what} — карточки кликабельны:`, list, ['Что есть в наличии?', 'Под заказ есть кубки?', 'Как заказать?']);
+    }
+
+    if (r.help) return this.say('Помогу так: 1) «что есть в наличии» — покажу остатки магазина из 1С; 2) «нужны кубки на хоккей, бюджет 15000» — подберу варианты; 3) «скинь фото медалей» — покажу фото; 4) «оформи заказ» — соберу спецификацию, вы выберите доставку и оплату, заказ уйдёт сотруднику магазина.');
+
+    if (r.bye) return this.say('Удачных турниров! Медалькин на связи — здесь и в MAX.');
+    if (r.thanks && !r.order) return this.say('Всегда пожалуйста! Обращайтесь — подберу, посчитаю, оформлю.');
+
     if (r.order) {
-      return this.orderFlow(out, text);
+      if (!this.goods.length) return this.say('Каталог ещё загружается — секунду, и повторите заказ.');
+      const list = this.pending ? this.recommend(3) : this.topStock(3);
+      this.order = this.buildOrder(list);
+      return {
+        text: 'Собрал черновик спецификации — позиции уже в корзине. Выберите доставку и оплату, оставьте имя и телефон: заказ уйдёт сотруднику в оформленной форме для заведения в 1С.',
+        products: list,
+        order: this.order,
+        chips: ['Открыть корзину', 'Добавить грамот', 'Сколько выйдет с доставкой?'],
+      };
     }
 
-    /* приветствие */
-    if (r.hello && !r.cat && !r.themes.length) {
-      text('Здравствуйте! Я Медалькин, ИИ-консультант «Наградного магазина». Подберу награды под ваше мероприятие и бюджет, соберу корзину — останется только подтвердить заказ.');
-      out.push({ type: 'chips', items: ['Школьный турнир', 'Спортивные соревнования', 'Награждение сотрудников', '9 Мая'] });
-      return out;
+    if (r.hello && !r.cat && !r.theme && !r.budget) return this.say('Приветствую! Я Медалькин, консультант «РАСПОРТ». Скажите, на какое мероприятие нужны награды — подберу медали, кубки и грамоты под бюджет.', null, ['Что есть в наличии?', 'Кубки на хоккей', 'Бюджет 15000 на медали']);
+
+    /* содержательный запрос: категория/тема/бюджет/цена */
+    if (r.cat || r.theme || r.budget || r.price || r.qty) {
+      this.pending = { cat: r.cat, theme: r.theme, budget: r.budget, qty: r.qty };
+      this.shown.clear();
+      const list = this.recommend(4);
+      let head = 'Подобрал варианты';
+      if (r.cat) head += ` — ${({ medal: 'медали', gramota: 'грамоты', cup: 'кубки' })[r.cat] || 'каталог'}`;
+      if (r.theme) head += `, тема «${THEMES[r.theme] || r.theme}»`;
+      if (r.budget) head += `, до ${this.money(r.budget)}`;
+      if (r.price && !r.budget) head = 'Вот цены на ходовые позиции';
+      head += '. «В наличии» — выдача сегодня, «под заказ» — 2–3 дня:';
+      return this.say(head, list, ['Скинь фото', 'Что есть в наличии?', 'Оформи заказ']);
     }
 
-    /* готовые комплекты */
-    if (r.kit && !r.order && !r.cat && !r.qty && !r.budget) {
-      text('У нас есть три готовых комплекта — дизайнерские решения под сценарий, на <b>10% выгоднее</b> заказа по частям:<br>· <b>Большой турнир</b> — кубок + медали 1–3 места + грамоты всем участникам<br>· <b>Школьное торжество</b> — кубок + медали + грамоты на целый класс<br>· <b>Корпоративное признание</b> — статуэтки + дипломы + благодарности партнёрам');
-      text('Посмотрите раздел «Комплекты» на странице — или соберём индивидуально прямо здесь:');
-      out.push({ type: 'chips', items: ['Кубки на турнир', 'Медали для школы', 'Грамоты сотрудникам'] });
-      return out;
+    if (/(под заказ|удалённ|удаленн|поставщик|rossimvol|ассортимент)/.test(text.toLowerCase())) {
+      const remote = this.goods.filter(p => p.src === 'remote' && (!this.pending?.cat || p.cat === this.pending.cat))
+        .sort((a, b) => a.price - b.price).slice(0, 4);
+      return this.say('Удалённый склад поставщика — кубки и грамоты под заказ 2–3 дня. Вот доступное:', remote, ['Нужны кубки подешевле', 'Оформи заказ', 'А медали есть?']);
     }
 
-    /* «ещё / другие варианты» */
-    if (r.more && this.lastSuggestions.length) {
-      const rec = this.recommend();
-      return this.pushRecommendation(out, text, rec);
+    if (/(дешев|подешев|эконом|бюджетн)/.test(text.toLowerCase())) {
+      this.pending = { ...this.pending, budget: 5000 };
+      return this.say('Вот самые доступные позиции по запросу:', this.recommend(4), ['Оформи заказ', 'Скинь фото']);
     }
 
-    /* «да / подходит / добавить» после подбора */
-    if ((r.yes || r.addAll) && !r.cat && this.lastSuggestions.length) {
-      out.push({ type: 'action', name: 'addAll', ids: this.lastSuggestions.map(p => p.id), qty: ctx.qty || 1 });
-      text(`Отлично, добавил в корзину${ctx.qty ? ' — по ' + ctx.qty + ' шт.' : ''}. Проверьте состав и оформите заказ:`);
-      out.push({ type: 'order' });
-      this.lastSuggestions = [];
-      return out;
+    if (/(^|\s)(да|давай|ещё|еще|продолж|покажи ещё)\b/.test(text.toLowerCase())) {
+      const more = this.recommend(4);
+      if (more.length) return this.say('Вот ещё варианты:', more);
+      this.shown.clear();
+      return this.say('Это была подборка целиком — уточните категорию, тему или бюджет, пройдусь заново.', this.recommend(4));
     }
 
-    /* назвали бюджет/тираж, но не сказали что именно */
-    if ((r.budget || r.qty) && !r.cat && !r.themes.length && !(ctx.cat || ctx.themes.size)) {
-      const bits = [];
-      if (r.budget) bits.push('бюджет ' + this.money(r.budget));
-      if (r.qty) bits.push('тираж ' + r.qty + ' шт.');
-      text('Записал: ' + bits.join(', ') + '. Теперь главное — что награждаем?');
-      out.push({ type: 'chips', items: ['Медали', 'Грамоты', 'Кубки'] });
-      return out;
-    }
-
-    if (r.help && !r.cat && !r.themes.length) {
-      text('С радостью! Скажите, какое мероприятие готовите — турнир, школьный конкурс, награждение сотрудников? И примерно бюджет. Дальше я сам.');
-      out.push({ type: 'chips', items: ['Медали для школы', 'Кубки на турнир', 'Грамоты сотрудникам', 'Бюджет до 10 000 ₽'] });
-      return out;
-    }
-
-    /* есть категория или тема — подбираем */
-    if (r.cat || r.themes.length || (this.met && (ctx.cat || ctx.themes.size))) {
-      const rec = this.recommend();
-      return this.pushRecommendation(out, text, rec);
-    }
-
-    /* ничего не поняли */
-    text('Я лучше всего разбираюсь в трёх вещах: <b>медали</b>, <b>грамоты</b> и <b>кубки</b> 🏅 Скажите, что нужно — или выберите вариант:');
-    out.push({ type: 'chips', items: ['Медали на турнир', 'Грамоты для школы', 'Кубок чемпиону', 'Бюджет до 10 000 ₽'] });
-    return out;
+    return this.say('Не понял задачу, но точно помогу. Скажите: какие награды нужны (медали, кубки, грамоты), на какое мероприятие и в каком бюджете. Например: «кубки на хоккейный турнир, 3 штуки, до 15000».', null, ['Что есть в наличии?', 'Кубки на хоккей', 'Как заказать?']);
   }
 
-  pushRecommendation(out, text, rec) {
-    const ctx = this.ctx;
-    // пропускаем уже показанные позиции; если страница исчерпана — берём следующую
-    let fresh = rec.items.filter(p => !this.shown.has(p.id));
-    while (rec.items.length && !fresh.length) {
-      rec = this.recommend();
-      fresh = rec.items.filter(p => !this.shown.has(p.id));
-    }
-    if (!fresh.length) {
-      this.lastSuggestions = [];
-      text('По этому запросу я показал всё, что есть в каталоге. Поищем в другом направлении?');
-      out.push({ type: 'chips', items: ['Медали', 'Грамоты', 'Кубки', 'Оформить заказ'] });
-      return out;
-    }
-    fresh.forEach(p => this.shown.add(p.id));
-    this.lastSuggestions = fresh;
+  say(text, products = null, chips = null, order = null) { return { text, products, chips, order }; }
 
-    const bits = [];
-    if (ctx.qty) bits.push('тираж ' + ctx.qty + ' шт.');
-    if (ctx.budget) bits.push('бюджет ' + this.money(ctx.budget) + (ctx.perUnit ? ' (~' + this.money(ctx.perUnit) + ' на награду)' : ''));
-    const lead = this.shown.size > fresh.length
-      ? 'Вот ещё варианты:'
-      : 'Подобрал под ваш запрос' + (bits.length ? ' (' + bits.join(', ') + ')' : '') + ':';
-    text(lead);
-    out.push({ type: 'products', items: fresh });
-    const tail = [];
-    if (ctx.qty >= 100) tail.push('тираж от 100 шт. — скидка 12%');
-    else if (ctx.qty >= 30) tail.push('тираж от 30 шт. — скидка 7%');
-    if (tail.length) text('Кстати, на ваш объём действует ' + tail.join(', ') + ' — менеджер учтёт её при подтверждении.');
-    out.push({ type: 'chips', items: ['Добавить всё в корзину', 'Показать ещё', 'Оформить заказ'] });
-    return out;
-  }
-
-  orderFlow(out, text) {
-    if (!this.lastSuggestions.length) {
-      text('Соберу заказ! Вот что сейчас в корзине:');
-      out.push({ type: 'order' });
-      out.push({ type: 'chips', items: ['Подобрать награды'] });
-      return out;
-    }
-    out.push({ type: 'action', name: 'addAll', ids: this.lastSuggestions.map(p => p.id), qty: this.ctx.qty || 1 });
-    this.lastSuggestions = [];
-    text('Добавил подобранные позиции. Проверьте состав — и оформим:');
-    out.push({ type: 'order' });
-    return out;
-  }
-
-  /* приветствие при открытии чата */
   greet() {
-    this.met = true;
-    return [
-      { type: 'text', html: 'Здравствуйте! Я <b>Медалькин</b> — ИИ-консультант «Наградного магазина» 🏅<br>Помогу подобрать медали, грамоты и кубки под ваше мероприятие и бюджет, соберу корзину и оформлю заказ.' },
-      { type: 'text', html: 'Какое событие готовите?' },
-      { type: 'chips', items: ['Школьный турнир', 'Спортивные соревнования', 'Награждение сотрудников', '9 Мая'] },
-    ];
+    return {
+      text: 'Здравствуйте! Я Медалькин — консультант «РАСПОРТ». Помогу подобрать медали, кубки и грамоты: скажите, на какое мероприятие нужны награды и в каком бюджете. Покажу наличие магазина (данные из 1С) или удалённый склад поставщика под заказ.',
+      chips: ['Что есть в наличии?', 'Нужны кубки на хоккей', 'Бюджет 15000 на медали', 'Скинь фото медалей'],
+    };
   }
 
-  /* подтверждение заказа (вызывает интерфейс) */
-  orderConfirmed(orderNum, total) {
-    this.reset();
-    this.met = true;
-    return [
-      { type: 'mood', happy: true },
-      { type: 'text', html: `Заказ <b>${orderNum}</b> на ${this.money(total)} принят! 🎉 Менеджер согласует с вами макет нанесения и пришлёт ссылку на оплату.` },
-      { type: 'text', html: 'А в скором будущем я буду присылать такие же подтверждения и ссылки на оплату прямо в мессенджер MAX.' },
-    ];
+  orderConfirmed() {
+    return this.say('Заказ принят! Спецификация у сотрудника магазина: он заведёт заказ в 1С, сверит остатки и перезвонит для подтверждения. Если что — я рядом, здесь и в MAX.');
   }
 }

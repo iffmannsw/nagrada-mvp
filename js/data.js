@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
-   Данные каталога и генераторы SVG-иллюстраций
-   Ассортимент и цены — ознакомительные, по мотивам rossimvol.ru
+   РАСПОРТ — справочники и генераторы SVG-иллюстраций
+   Ассортимент приходит из data/*.json (1С и парсер
+   rossimvol) — см. js/shop.js; тут только словари и арта
    ═══════════════════════════════════════════════════ */
 
 const CATS = {
@@ -15,127 +16,22 @@ const THEMES = {
   football:  'Футбол',
   hockey:    'Хоккей',
   chess:     'Шахматы',
+  volleyball:'Волейбол',
+  run:       'Бег и лыжи',
   school:    'Школа и учёба',
   kids:      'Детские мероприятия',
   office:    'Для компаний',
   may9:      '9 Мая',
 };
 
-const PRODUCTS = [
-  /* ── МЕДАЛИ ── реальные товары rossimvol.ru, розничная цена ≈ закупка ×2 */
-  { id: 'm1', cat: 'medal', art: 'MMC7071', name: 'Медаль «1 место» MMC7071, 70 мм', price: 300, oldPrice: 350, badge: 'hit',
-    themes: ['victory', 'universal'], img: 'img/medal_mmc7071.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'n1', ribbon: 'red' },
-    desc: 'Крупная золотая медаль «1 место» диаметром 70 мм — солидно смотрится на церемонии любого уровня. Лента в комплекте.' },
-  { id: 'm2', cat: 'medal', art: 'MD1750', name: 'Медаль «1 место» MD1750, 50 мм', price: 140, oldPrice: 175, badge: 'sale',
-    themes: ['victory', 'universal'], img: 'img/medal_md1750.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'n1', ribbon: 'bordeaux' },
-    desc: 'Классическая золотая медаль «1 место» 50 мм — рабочий формат для турниров с большим числом награждений.' },
-  { id: 'm3', cat: 'medal', art: 'MD2450', name: 'Медаль «Футбол» MD2450, 50 мм', price: 145, badge: 'hit',
-    themes: ['football', 'universal'], img: 'img/medal_md2450.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'ball', ribbon: 'green' },
-    desc: 'Футбольная медаль с мячом — для лиг, дворовых турниров и чемпионатов школ.' },
-  { id: 'm4', cat: 'medal', art: 'MMC6064', name: 'Медаль «1 место» MMC6064, 60 мм', price: 305, badge: 'new',
-    themes: ['victory', 'universal'], img: 'img/medal_mmc6064.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'n1', ribbon: 'blue' },
-    desc: 'Увеличенная медаль «1 место» 60 мм с рельефным бортиком — вариант, когда награда должна быть «погромче».' },
-  { id: 'm5', cat: 'medal', art: 'MMC2350', name: 'Медаль «Бег» MMC2350, 50 мм', price: 140,
-    themes: ['universal', 'victory'], img: 'img/medal_mmc2350.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'star', ribbon: 'red' },
-    desc: 'Медаль для легкоатлетических забегов и кроссов — бегун в динамике, золото, лента в комплекте.' },
-  { id: 'm6', cat: 'medal', art: 'ME005', name: 'Медаль «1 место» ME005, 50 мм', price: 140,
-    themes: ['victory', 'universal'], img: 'img/medal_me005.jpg',
-    artc: { kind: 'medal', metal: 'silver', icon: 'n1', ribbon: 'bordeaux' },
-    desc: 'Медаль «1 место» серии ME — аккуратный рельеф, ровная позолота. Берут комплектами на 1–3 место.' },
-  { id: 'm7', cat: 'medal', art: 'ME008', name: 'Медаль «Волейбол» ME008, 50 мм', price: 135,
-    themes: ['universal', 'victory'], img: 'img/medal_me008.jpg',
-    artc: { kind: 'medal', metal: 'gold', icon: 'ball', ribbon: 'blue' },
-    desc: 'Волейбольная медаль с мячом — турниры школ, секций и любительских лиг.' },
-  { id: 'm8', cat: 'medal', art: 'MMA4510', name: 'Медаль «1 место» MMA4510, 45 мм', price: 130,
-    themes: ['victory', 'universal'], img: 'img/medal_mma4510.jpg',
-    artc: { kind: 'medal', metal: 'bronze', icon: 'n1', ribbon: 'green' },
-    desc: 'Компактная медаль «1 место» 45 мм — экономичный вариант для массовых награждений.' },
-  { id: 'm9', cat: 'medal', art: 'MMC3350', name: 'Медаль «Лыжи» MMC3350, 50 мм', price: 140,
-    themes: ['universal', 'victory'], img: 'img/medal_mmc3350.jpg',
-    artc: { kind: 'medal', metal: 'silver', icon: 'star', ribbon: 'blue' },
-    desc: 'Лыжная медаль для зимних гонок и «лыжни России» — рельеф с лыжником, серебро.' },
+/* источники товара для витрины */
+const SOURCES = {
+  shop:   { label: 'Магазин',        tag: 'В НАЛИЧИИ', stock: 'Выдача сегодня — собственный склад' },
+  remote: { label: 'Удалённый склад', tag: 'ПОД ЗАКАЗ', stock: 'Под заказ 2–3 дня — склад поставщика' },
+};
 
-  /* ── ГРАМОТЫ ── */
-  { id: 'g1', cat: 'gramota', art: 'ГР-18', name: 'Грамота ГР-18 «Российская геральдика»', price: 25, badge: 'hit',
-    themes: ['universal', 'school'], img: 'img/gramota_gr_18.jpg',
-    artc: { kind: 'gramota', accent: 'gold' },
-    desc: 'Плотный дизайнерский бланк с золотой геральдической рамкой — универсальная награда для официальных мероприятий.' },
-  { id: 'g2', cat: 'gramota', art: 'ГР-60', name: 'Грамота ГР-60', price: 25,
-    themes: ['universal', 'school'], img: 'img/gramota_gr_60.jpg',
-    artc: { kind: 'gramota', accent: 'bordeaux' },
-    desc: 'Строгий бланк для массового награждения: турниры, олимпиады, конкурсы. Печать текста — от 10 штук.' },
-  { id: 'g3', cat: 'gramota', art: 'ГР-66', name: 'Грамота ГР-66 «Российская геральдика»', price: 25, oldPrice: 30,
-    themes: ['universal', 'school'], img: 'img/gramota_gr_66.jpg',
-    artc: { kind: 'gramota', accent: 'gold' },
-    desc: 'Грамота с государственным орнаментом и местом под печать — выглядит дороже своей цены.' },
-  { id: 'g4', cat: 'gramota', art: 'ГР-53', name: 'Грамота ГР-53', price: 35,
-    themes: ['universal', 'school'], img: 'img/gramota_gr_53.jpg',
-    artc: { kind: 'gramota', accent: 'green' },
-    desc: 'Бланк повышенной плотности с декоративной рамкой — для награждений, где грамота остаётся на память.' },
-  { id: 'g5', cat: 'gramota', art: 'Д-6', name: 'Диплом Д-6 «Российская геральдика»', price: 35,
-    themes: ['office', 'universal'], img: 'img/gramota_d_6.jpg',
-    artc: { kind: 'gramota', accent: 'gold' },
-    desc: 'Диплом в классической геральдической рамке — конкурсы профмастерства, корпоративные премии, конференции.' },
-  { id: 'g6', cat: 'gramota', art: 'ГР-4', name: 'Грамота ГР-4 «Российская геральдика»', price: 35,
-    themes: ['school', 'universal'], img: 'img/gramota_gr_4.jpg',
-    artc: { kind: 'gramota', accent: 'bordeaux' },
-    desc: 'Грамота с двуглавым орлом и триколором — для школьных и муниципальных мероприятий.' },
-  { id: 'g7', cat: 'gramota', art: 'ГР-1', name: 'Грамота ГР-1 «Российская геральдика»', price: 25, badge: 'hit',
-    themes: ['school', 'universal'], img: 'img/gramota_gr_1.jpg',
-    artc: { kind: 'gramota', accent: 'gold' },
-    desc: 'Самый ходовой бланк серии: строгая рамка, золото, уместен почти на любом награждении.' },
-  { id: 'g8', cat: 'gramota', art: 'Д-7', name: 'Диплом Д-7 «Российская геральдика»', price: 35,
-    themes: ['office', 'universal'], img: 'img/gramota_d_7.jpg',
-    artc: { kind: 'gramota', accent: 'bordeaux' },
-    desc: 'Диплом для партнёров и сотрудников — солидная рамка, место под подпись руководителя и печать.' },
-  { id: 'g9', cat: 'gramota', art: 'ГР-32', name: 'Грамота «Шахматы» ГР-32', price: 25,
-    themes: ['chess', 'school'], img: 'img/gramota_gr_32.jpg',
-    artc: { kind: 'gramota', accent: 'blue' },
-    desc: 'Бланк с шахматной тематикой — турниры школ, секций и клубных первенств.' },
-
-  /* ── КУБКИ ── */
-  { id: 'k1', cat: 'cup', art: '1523', name: 'Кубок 1523, 37 см', price: 7535, badge: 'hit',
-    themes: ['universal', 'victory'], img: 'img/cup_1523.jpg',
-    artc: { kind: 'cup', shape: 'prestige', metal: 'gold', base: 'marble' },
-    desc: 'Статусный кубок на мраморной базе — главный трофей чемпионата или финала сезона. Гравировка на табличке в подарок.' },
-  { id: 'k2', cat: 'cup', art: '2005', name: 'Кубок 2005, 49,5 см', price: 15120,
-    themes: ['universal', 'victory'], img: 'img/cup_2005.jpg',
-    artc: { kind: 'cup', shape: 'big', metal: 'gold', base: 'marble' },
-    desc: 'Почти полуметровый кубок-доминанта церемонии: массивная чаша, устойчивая база, глубокая гравировка.' },
-  { id: 'k3', cat: 'cup', art: '2007', name: 'Кубок 2007, 53 см', price: 17065, oldPrice: 18900,
-    themes: ['universal', 'victory'], img: 'img/cup_2007.jpg',
-    artc: { kind: 'cup', shape: 'big', metal: 'gold', base: 'black' },
-    desc: 'Флагман серии: 53 см, выверенные пропорции, премиальная отделка. Для главных событий года.' },
-  { id: 'k4', cat: 'cup', art: '1505', name: 'Кубок 1505, 53 см', price: 17975, badge: 'new',
-    themes: ['universal', 'victory'], img: 'img/cup_1505.jpg',
-    artc: { kind: 'cup', shape: 'prestige', metal: 'gold', base: 'black' },
-    desc: 'Новинка поставщика: крупный кубок с изящным силуэтом — подойдёт и спорту, и корпоративной премии.' },
-  { id: 'k5', cat: 'cup', art: '8300', name: 'Кубок 8300, 13,5 см', price: 575, badge: 'hit',
-    themes: ['universal', 'victory'], img: 'img/cup_8300.jpg',
-    artc: { kind: 'cup', shape: 'econ', metal: 'gold', base: 'black' },
-    desc: 'Мини-кубок для массовых награждений: команды, места, номинации. Один — недорого, тираж — заметная экономия.' },
-  { id: 'k6', cat: 'cup', art: '3018', name: 'Кубок 3018, 35 см', price: 2790,
-    themes: ['universal', 'office'], img: 'img/cup_3018.jpg',
-    artc: { kind: 'cup', shape: 'std', metal: 'gold', base: 'black' },
-    desc: 'Классический кубок 35 см — золотая середина между солидностью и бюджетом. Хит корпоративных награждений.' },
-  { id: 'k7', cat: 'cup', art: '3021', name: 'Кубок 3021, 39 см', price: 3810,
-    themes: ['universal', 'victory'], img: 'img/cup_3021.jpg',
-    artc: { kind: 'cup', shape: 'std', metal: 'gold', base: 'black' },
-    desc: 'Кубок 39 см с широкой чашей — хорошо «читается» со сцены и на фотографиях победителей.' },
-  { id: 'k8', cat: 'cup', art: '3535', name: 'Кубок 3535 «Триколор», 23 см', price: 2200, oldPrice: 2600, badge: 'sale',
-    themes: ['universal', 'victory'], img: 'img/cup_3535.jpg',
-    artc: { kind: 'cup', shape: 'std', metal: 'silver', base: 'black' },
-    desc: 'Кубок с лентой-триколором — российские турниры, патриотические мероприятия, «лыжня России».' },
-  { id: 'k9', cat: 'cup', art: '4024', name: 'Кубок 4024, 30,5 см', price: 2525,
-    themes: ['universal', 'victory'], img: 'img/cup_4024.jpg',
-    artc: { kind: 'cup', shape: 'std', metal: 'gold', base: 'wood' },
-    desc: 'Кубок 30,5 см на деревянной базе — тёплый «классический» вид для турниров и конкурсов.' },
-];
+/* карты металлов из характеристик 1С */
+const METAL_LABELS = { gold: 'золото', silver: 'серебро', bronze: 'бронза', mix: 'микс' };
 
 /* ── утилиты ── */
 let __uid = 0;
@@ -224,6 +120,7 @@ function numberIcon(n, L, m) {
 
 /* ══════════ ГРАМОТА ══════════ */
 const GR_ACCENTS = {
+  red: { frame: '#E03810', seal: '#8E2130', deco: '#E03810' },
   gold: { frame: '#C9A227', seal: '#8E2130', deco: '#C9A227' },
   bordeaux: { frame: '#8E2130', seal: '#C9A227', deco: '#8E2130' },
   green: { frame: '#2E7D4F', seal: '#C9A227', deco: '#2E7D4F' },
@@ -391,39 +288,6 @@ function mascotSVG(opts = {}) {
   <path class="m-spark m-spark--3" d="M160 40l2 4.6 4.6 2-4.6 2-2 4.6-2-4.6-4.6-2 4.6-2z" fill="#E9C759"/>
 </svg>`;
 }
-
-/* ═══════════════════════════════════════════════════
-   ГОТОВЫЕ КОМПЛЕКТЫ — дизайнерские решения под сценарий
-   discount — выгода комплекта против заказа по частям
-   ═══════════════════════════════════════════════════ */
-const KITS = [
-  {
-    id: 'kit-sport', num: '01', name: 'Большой турнир',
-    scene: 'Соревнование или спартакиада — кубок чемпиону, 15 медалей призёрам и грамота каждому участнику.',
-    items: [['k5', 1], ['m2', 5], ['m6', 5], ['m7', 5], ['g2', 15]],
-    composition: { cup: 'k5', gramota: 'g2', gramota2: 'g2', medalL: 'm2', medalR: 'm6' },
-    badge: 'выгода 10%',
-    note: 'Медали — комплектом на 15 призёров, гравировка кубка в подарок',
-  },
-  {
-    id: 'kit-school', num: '02', name: 'Школьное торжество',
-    scene: 'Линейка или предметная неделя — кубок лучшему классу, медали и грамоты «Российская геральдика».',
-    items: [['k7', 1], ['m8', 10], ['g1', 20]],
-    composition: { cup: 'k7', gramota: 'g1', gramota2: 'g1', medalL: 'm8', medalR: 'm8' },
-    badge: 'выгода 10%',
-    note: 'Заполним грамоты по списку класса — пришлите имена, печати уже стоят',
-  },
-  {
-    id: 'kit-office', num: '03', name: 'Корпоративное признание',
-    scene: 'Итоги года или конкурс профмастерства — кубок команде-победителю, дипломы лучшим, благодарности партнёрам.',
-    items: [['k6', 1], ['g5', 10], ['g8', 5]],
-    composition: { cup: 'k6', gramota: 'g5', gramota2: 'g8', medalL: null, medalR: null },
-    badge: 'выгода 10%',
-    note: 'Гравировка имён и логотипа компании на кубке — в цене комплекта',
-  },
-];
-
-const KIT_DISCOUNT = 0.10;
 
 /* арта товара: фото, если задано p.img, иначе студийный SVG */
 function productArt(p) {

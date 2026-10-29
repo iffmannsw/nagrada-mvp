@@ -2,262 +2,292 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<meta name="theme-color" content="#FCF9F7">
-<title>Наградной магазин — медали, грамоты и кубки для ваших победителей</title>
-<meta name="description" content="Наградная продукция для соревнований, школ и компаний: медали, грамоты, кубки. ИИ-консультант Медалькин поможет собрать заказ с телефона за 5 минут.">
+<meta name="theme-color" content="#FFFFFF">
+<title>РАСПОРТ — наградная продукция для спорта | Медали, кубки, грамоты</title>
+<meta name="description" content="Магазин наградной продукции РАСПОРТ: медали, кубки, грамоты. Собственный склад и удалённый склад поставщика под заказ. Консультант поможет подобрать и оформить заказ.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23E03810'/%3E%3Ctext x='32' y='44' font-family='Arial Black' font-size='30' fill='%23fff' text-anchor='middle'%3EР%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=11">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='36' r='22' fill='%23C9A227'/%3E%3Crect x='24' y='4' width='7' height='18' rx='2' fill='%235C1A24'/%3E%3Crect x='33' y='4' width='7' height='18' rx='2' fill='%23A4831B'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Inter:wght@400;500;600&family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=20">
+<script src="js/data.js" defer></script>
+<script src="js/medalkin.js" defer></script>
+<script src="js/shop.js" defer></script>
+<script src="js/app.js" defer></script>
 </head>
-<body style="background:#FCF9F7">
+<body style="background:#FFFFFF">
 
-<!-- ══════════════ ШАПКА ══════════════ -->
 <header class="header">
-  <div class="header__inner">
-    <a class="logo" href="#top" aria-label="Наградной магазин — на главную">
-      <span class="logo__mark" aria-hidden="true">
-        <svg viewBox="0 0 48 48"><rect x="17" y="2" width="6" height="14" rx="2" fill="#8E2130" transform="rotate(-14 20 9)"/><rect x="25" y="2" width="6" height="14" rx="2" fill="#C9A227" transform="rotate(14 28 9)"/><circle cx="24" cy="29" r="16" fill="url(#logoGold)"/><circle cx="24" cy="29" r="11.5" fill="none" stroke="#8a6d15" stroke-width="1.4"/><path d="M24 21.5l2 4.4 4.8.5-3.6 3.3 1 4.8-4.2-2.5-4.2 2.5 1-4.8-3.6-3.3 4.8-.5z" fill="#8a6d15"/><defs><linearGradient id="logoGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9C759"/><stop offset=".55" stop-color="#C9A227"/><stop offset="1" stop-color="#A4831B"/></linearGradient></defs></svg>
-      </span>
-      <span class="logo__text">Наградной магазин</span>
+  <div class="header__inner container">
+    <a href="#" class="logo" aria-label="РАСПОРТ — на главную">
+      <svg viewBox="0 0 356 56" class="logo__svg" role="img" aria-label="РАСПОРТ">
+        <rect x="1" y="1" width="354" height="54" fill="#E03810"/>
+        <text x="18" y="40" font-family="'Russo One',sans-serif" font-size="30" fill="#FFFFFF" letter-spacing="1">РА</text>
+        <g stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none">
+          <circle cx="96" cy="16" r="4.2" fill="#FFFFFF" stroke="none"/>
+          <path d="M96 21 L87 31"/>
+          <path d="M96 21 L105 31"/>
+          <path d="M87 31 L96 42 L105 31"/>
+          <path d="M85 15 L92 20 M107 15 L100 20"/>
+        </g>
+        <text x="120" y="40" font-family="'Russo One',sans-serif" font-size="30" fill="#FFFFFF" letter-spacing="1">СПОРТ</text>
+      </svg>
+      <span class="logo__sub">наградная продукция</span>
     </a>
-    <nav class="header__nav" aria-label="Основная навигация">
-      <a href="#kits">Комплекты</a>
-      <a href="#catalog">Каталог</a>
-      <a href="#how">Как заказать</a>
+    <nav class="header__nav">
+      <a href="#catalog" data-anchor>КАТАЛОГ</a>
+      <a href="#how" data-anchor>КАК ЗАКАЗАТЬ</a>
+      <a href="#agent" data-anchor>КОНСУЛЬТАНТ</a>
+      <a href="#contacts" data-anchor>КОНТАКТЫ</a>
     </nav>
-    <div class="header__actions">
-      <button class="cart-btn" id="cartBtn" type="button" aria-label="Открыть корзину">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16l-1.3 11.2a2 2 0 0 1-2 1.8H7.3a2 2 0 0 1-2-1.8L4 7z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 10V6a3.5 3.5 0 0 1 7 0v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        <span class="cart-btn__label">Корзина</span>
-        <span class="cart-btn__count" id="cartCount" hidden>0</span>
+    <div class="header__side">
+      <a class="header__phone" href="tel:+70000000000">+7 (000) 000-00-00</a>
+      <button class="cart-btn" data-open="cart" aria-label="Открыть корзину">
+        <span>КОРЗИНА</span><b class="cart-btn__n" id="cartCount" hidden>0</b>
       </button>
     </div>
   </div>
 </header>
 
-<main id="top">
-
-  <!-- ══════════════ ГЛАВНЫЙ ЭКРАН ══════════════ -->
-  <section class="hero">
-    <div class="hero__bg" aria-hidden="true"></div>
-    <div class="hero__inner">
-      <div class="hero__text">
-        <p class="hero__kicker">Наградная продукция для событий, которые помнят</p>
-        <h1 class="hero__title">Каждый победитель<br>достоин своей награды</h1>
-        <p class="hero__sub">Медали, грамоты и кубки с гравировкой и печатью — от трёх штук до тиража на весь турнир. Подберём под задачу и бюджет.</p>
-        <div class="hero__cta">
-          <a class="btn btn--gold" href="#catalog">Смотреть каталог</a>
-          <button class="btn btn--ghost" id="heroAskBtn" type="button">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8.2" stroke="currentColor" stroke-width="1.5"/><circle cx="7.4" cy="8.4" r=".95" fill="currentColor"/><circle cx="12.6" cy="8.4" r=".95" fill="currentColor"/><path d="M7 12.4c.9.9 1.9 1.3 3 1.3s2.1-.4 3-1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Спросить Медалькина
-          </button>
-        </div>
+<main>
+<!-- ══════════ ГЕРОЙ ══════════ -->
+<section class="hero">
+  <div class="container hero__grid">
+    <div class="hero__text">
+      <div class="hero__kicker"><i></i>НАГРАДНАЯ ПРОДУКЦИЯ ДЛЯ СПОРТА</div>
+      <h1 class="hero__title">НАГРАДЫ,<br>ДОСТОЙНЫЕ&nbsp;<em>ПОБЕДЫ</em></h1>
+      <p class="hero__lead">Медали, кубки и грамоты для турниров, школ и корпоративных премий. Собственный склад — выдача сегодня. Удалённый склад поставщика — под заказ 2–3 дня.</p>
+      <div class="hero__actions">
+        <a class="btn btn--dark" href="#catalog" data-anchor>СМОТРЕТЬ КАТАЛОГ<span class="btn__arr">→</span></a>
+        <button class="btn btn--ghost" data-open-chat>ЗАДАТЬ ВОПРОС</button>
       </div>
-      <div class="hero__mascot" aria-hidden="true">
-        <div class="mascot mascot--hero" id="heroMascot"></div>
-        <div class="hero__bubble" id="heroBubble">Привет! Я Медалькин — помогу подобрать награды и собрать заказ</div>
+      <dl class="hero__stats">
+        <div><dt>в наличии</dt><dd><b id="statShop">—</b> позиций</dd></div>
+        <div><dt>под заказ</dt><dd><b id="statRemote">—</b> позиций</dd></div>
+        <div><dt>выдача заказа</dt><dd><b>от 1</b> дня</dd></div>
+      </dl>
+    </div>
+    <div class="hero__art" aria-hidden="true">
+      <figure class="hero__ph hero__ph--a"><img src="img/cup_1523.jpg" alt="" loading="lazy"></figure>
+      <figure class="hero__ph hero__ph--b"><img src="img/medal_mmc7071.jpg" alt="" loading="lazy"></figure>
+      <figure class="hero__ph hero__ph--c"><img src="img/remote/8300.jpeg" alt="" loading="lazy"></figure>
+      <div class="hero__tag hero__tag--a">СКЛАД<span>выдача сегодня</span></div>
+      <div class="hero__tag hero__tag--b">ПОД ЗАКАЗ<span>2–3 дня</span></div>
+    </div>
+  </div>
+  <div class="hero__ribbon" aria-hidden="true">
+    <div class="hero__ribbon-track">
+      <span>МЕДАЛИ • КУБКИ • ГРАМОТЫ • ДИПЛОМЫ • ЛЕНТЫ • ПОДСТАВКИ • ГРАВИРОВКА • КОМПЛЕКТЫ ПОД ТУРНИР • МЕДАЛИ • КУБКИ • ГРАМОТЫ • ДИПЛОМЫ • ЛЕНТЫ • ПОДСТАВКИ • ГРАВИРОВКА • КОМПЛЕКТЫ ПОД ТУРНИР •&nbsp;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ КАТАЛОГ-КОНСТРУКТОР ══════════ -->
+<section class="catalog" id="catalog">
+  <div class="container">
+    <header class="sec-head">
+      <div class="sec-head__kick"><i></i>КАТАЛОГ</div>
+      <h2 class="sec-head__title">ДВА СКЛАДА —<em> ОДИН ЗАКАЗ</em></h2>
+      <p class="sec-head__note">Товары из «Магазина» есть на собственном складе — остатки синхронизируются с 1С. Позиции «Удалённого склада» — номенклатура поставщика, привозим под заказ. Всё попадает в одну корзину и одну спецификацию.</p>
+    </header>
+
+    <div class="mode" role="tablist" aria-label="Источник товара">
+      <button class="mode__btn is-active" role="tab" aria-selected="true" data-mode="shop" id="modeShop">
+        <b>МАГАЗИН</b><span>собственный склад · выдача сегодня · <i id="modeShopCount">…</i> поз.</span>
+      </button>
+      <button class="mode__btn" role="tab" aria-selected="false" data-mode="remote" id="modeRemote">
+        <b>УДАЛЁННЫЙ СКЛАД</b><span>склад поставщика · под заказ 2–3 дня · <i id="modeRemoteCount">…</i> поз.</span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <div class="cats" id="catTabs"></div>
+      <div class="toolbar__right">
+        <label class="search"><input type="search" id="searchInput" placeholder="Поиск: артикул, название…" aria-label="Поиск по каталогу"></label>
+        <label class="sort">сорт.<select id="sortSelect" aria-label="Сортировка">
+          <option value="pop">популярные</option>
+          <option value="priceAsc">цена ↑</option>
+          <option value="priceDesc">цена ↓</option>
+          <option value="stockDesc">остаток ↑</option>
+        </select></label>
       </div>
     </div>
-    <div class="hero__facts">
-      <div class="fact">
-        <span class="fact__num" id="factCount">27</span>
-        <span class="fact__label">позиций в каталоге — медали, грамоты, кубки</span>
-      </div>
-      <div class="fact">
-        <span class="fact__num">от 3 дней</span>
-        <span class="fact__label">изготовление нанесения: гравировка, УФ-печать, тиснение</span>
-      </div>
-      <div class="fact">
-        <span class="fact__num">5 минут</span>
-        <span class="fact__label">чтобы собрать заказ с телефона — Медалькин поможет</span>
-      </div>
-    </div>
-  </section>
 
-  <!-- ══════════════ ГОТОВЫЕ КОМПЛЕКТЫ ══════════════ -->
-  <section class="kits" id="kits">
-    <div class="kits__inner">
-      <p class="section-kicker">Готовые решения</p>
-      <h2 class="section-title">Комплекты наград</h2>
-      <p class="section-sub">Собраны нашими дизайнерами под конкретный сценарий: предметы в едином стиле, продуманные пропорции и цена на 10% выгоднее сборного заказа. Осталось вписать названия команд — и проводить церемонию.</p>
-      <div class="kits-grid" id="kitsGrid"></div>
+    <div class="grid-meta" id="gridMeta">…</div>
+    <div class="p-grid" id="productGrid"></div>
+    <div class="grid-more">
+      <button class="btn btn--ghost" id="moreBtn" hidden>ПОКАЗАТЬ ЕЩЁ<span class="btn__arr">↓</span></button>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ══════════════ КАТАЛОГ ══════════════ -->
-  <section class="catalog" id="catalog">
-    <div class="catalog__head">
-      <h2 class="section-title">Каталог</h2>
-      <div class="toolbar">
-        <div class="tabs" id="catTabs" role="tablist" aria-label="Категории"></div>
-        <div class="toolbar__right">
-          <label class="search">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6"/><path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="search" id="searchInput" placeholder="Поиск: футбол, 1 место, шахматы…" aria-label="Поиск по каталогу">
-          </label>
-          <label class="sort">
-            <select id="sortSelect" aria-label="Сортировка">
-              <option value="default">По умолчанию</option>
-              <option value="cheap">Сначала дешевле</option>
-              <option value="expensive">Сначала дороже</option>
-              <option value="benefit">Максимальная выгода</option>
-            </select>
-          </label>
-        </div>
-      </div>
-    </div>
-    <div class="grid" id="productGrid"></div>
-    <p class="grid__empty" id="gridEmpty" hidden>Ничего не нашлось. Попробуйте другой запрос — или спросите Медалькина, он знает весь ассортимент.</p>
-  </section>
-
-  <!-- ══════════════ КАК ЗАКАЗАТЬ ══════════════ -->
-  <section class="how" id="how">
-    <h2 class="section-title">Как заказать</h2>
-    <ol class="steps" id="stepsList">
-      <li class="step">
-        <span class="step__num">1</span>
-        <h3>Выберите награды</h3>
-        <p>Сами в каталоге или вместе с Медалькином — он уточнит повод, бюджет и тираж.</p>
-      </li>
-      <li class="step">
-        <span class="step__num">2</span>
-        <h3>Подтвердите состав</h3>
-        <p>Проверяем макет нанесения: текст гравировки, имена, логотип или дату события.</p>
-      </li>
-      <li class="step">
-        <span class="step__num">3</span>
-        <h3>Получите ссылку на оплату</h3>
-        <p>После подтверждения заказа пришлём ссылку на онлайн-оплату — картой или по СБП.</p>
-      </li>
-      <li class="step">
-        <span class="step__num">4</span>
-        <h3>Заберите заказ</h3>
-        <p>Самовывоз из магазина, доставка курьером по городу или в любой регион — 1–7 дней.</p>
-      </li>
+<!-- ══════════ КАК ЗАКАЗАТЬ ══════════ -->
+<section class="how" id="how">
+  <div class="container">
+    <header class="sec-head sec-head--center">
+      <div class="sec-head__kick"><i></i>ПРОЦЕСС</div>
+      <h2 class="sec-head__title">КАК<em> ЗАКАЗАТЬ</em></h2>
+    </header>
+    <ol class="steps">
+      <li><b>01</b><h3>Запрос или подбор</h3><p>Опишите задачу консультанту — «нужны медали и кубки на турнир, бюджет 30 000 ₽». Медалькин соберёт подборку с ценами и фото.</p></li>
+      <li><b>02</b><h3>Спецификация</h3><p>Товар + количество + способ доставки и оплаты. Всё в одном документе — как счёт, только быстрее.</p></li>
+      <li><b>03</b><h3>Подтверждение</h3><p>Заказ с данными покупателя уходит сотруднику магазина в оформленной форме. Мы сверяем наличие по 1С.</p></li>
+      <li><b>04</b><h3>Выдача и доставка</h3><p>Самовывоз — в день заказа (склад магазина). Позиции под заказ — 2–3 дня. Доставка по городу и в регионы.</p></li>
     </ol>
-    <div class="how__max">
-      <div class="how__max-text">
-        <strong>Медалькин скоро будет в мессенджере MAX</strong>
-        <span>Тот же консультант, но в привычном чате: подберёт товар, покажет фото с сайта, оформит заказ и пришлёт ссылку на оплату.</span>
+    <div class="agent-strip" id="agent">
+      <div class="agent-strip__text">
+        <div class="sec-head__kick sec-head__kick--light"><i></i>АГЕНТ-КОНСУЛЬТАНТ</div>
+        <h3>МЕДАЛЬКИН РАБОТАЕТ НА САЙТЕ<br>И В МЕССЕНДЖЕРЕ <em>MAX</em></h3>
+        <p>Ответит «что есть в наличии», скинет фото медалей и кубков, подберёт под бюджет и оформит заказ со спецификацией. Данные покупателя передаются сотруднику в готовой форме для заведения в 1С.</p>
       </div>
-      <span class="max-badge" aria-hidden="true">MAX</span>
+      <div class="agent-strip__side">
+        <div class="agent-strip__mascot" aria-hidden="true"></div>
+        <button class="btn btn--red" data-open-chat>НАПИСАТЬ МЕДАЛЬКИНУ<span class="btn__arr">→</span></button>
+      </div>
     </div>
-  </section>
-
+  </div>
+</section>
 </main>
 
-<!-- ══════════════ ПОДВАЛ ══════════════ -->
-<footer class="footer">
-  <div class="footer__inner">
-    <span class="footer__brand">Наградной магазин</span>
-    <span class="footer__note">Демонстрационный прототип. Ассортимент и цены — ознакомительные, по данным поставщика rossimvol.ru</span>
+<!-- ══════════ ФУТЕР ══════════ -->
+<footer class="footer" id="contacts">
+  <div class="container footer__grid">
+    <div class="footer__brand">
+      <svg viewBox="0 0 356 56" class="logo__svg logo__svg--foot" role="img" aria-label="РАСПОРТ">
+        <rect x="1" y="1" width="354" height="54" fill="#E03810"/>
+        <text x="18" y="40" font-family="'Russo One',sans-serif" font-size="30" fill="#FFFFFF">РА</text>
+        <g stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none">
+          <circle cx="96" cy="16" r="4.2" fill="#FFFFFF" stroke="none"/>
+          <path d="M96 21 L87 31"/><path d="M96 21 L105 31"/>
+          <path d="M87 31 L96 42 L105 31"/><path d="M85 15 L92 20 M107 15 L100 20"/>
+        </g>
+        <text x="120" y="40" font-family="'Russo One',sans-serif" font-size="30" fill="#FFFFFF">СПОРТ</text>
+      </svg>
+      <p>Наградная продукция для спорта, школ и корпоративных премий. Магазин — собственные остатки из 1С. Удалённый склад — номенклатура поставщика.</p>
+    </div>
+    <nav class="footer__col">
+      <h4>КАТАЛОГ</h4>
+      <a href="#catalog" data-anchor>Магазин · в наличии</a>
+      <a href="#catalog" data-anchor>Удалённый склад · под заказ</a>
+    </nav>
+    <nav class="footer__col">
+      <h4>СВЯЗЬ</h4>
+      <a href="tel:+70000000000">+7 (000) 000-00-00</a>
+      <a href="mailto:zakaz@rasport.ru">zakaz@rasport.ru</a>
+      <a href="#" rel="noopener">Написать в MAX →</a>
+    </nav>
+    <div class="footer__col footer__col--tech">
+      <h4>ОБМЕН ДАННЫМИ</h4>
+      <p class="footer__tech">
+        <span><b>1С → сайт</b> выгрузка остатков → виртуальный склад</span>
+        <span><b>Поставщик → сайт</b> периодический парсинг каталога</span>
+        <span><b>Сайт → MAX</b> агент принимает заказы 24/7</span>
+        <span><b>Заказ → 1С</b> спецификация сотруднику для заведения</span>
+      </p>
+    </div>
+  </div>
+  <div class="footer__line">
+    <div class="container footer__line-in">
+      <span>© 2026 РАСПОРТ · наградная продукция</span>
+      <span>Витрина-демо: магазин — данные из 1С, удалённый склад — rossimvol.ru</span>
+    </div>
   </div>
 </footer>
 
-<!-- ══════════════ КОРЗИНА / ОФОРМЛЕНИЕ ══════════════ -->
-<div class="overlay" id="overlay" hidden></div>
-
-<aside class="drawer" id="cartDrawer" aria-label="Корзина и оформление заказа" aria-hidden="true">
-  <div class="drawer__head">
-    <h2 class="drawer__title" id="drawerTitle">Корзина</h2>
-    <button class="icon-btn" id="drawerClose" type="button" aria-label="Закрыть корзину">
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    </button>
-  </div>
-
-  <!-- шаг 1: корзина -->
-  <div class="drawer__view" id="viewCart" data-view="cart">
-    <div class="drawer__body" id="cartItems"></div>
-    <p class="drawer__empty" id="cartEmpty">Корзина пуста. Добавьте награды из каталога — или попросите Медалькина, он соберёт за вас.</p>
-    <div class="drawer__foot" id="cartFoot" hidden>
-      <div class="sum-row"><span>Товары (<b id="cartTotalQty">0</b> шт.)</span><b id="cartSum">0 ₽</b></div>
-      <div class="sum-row sum-row--muted"><span>Нанесение (гравировка / печать)</span><span>по макету, после подтверждения</span></div>
-      <button class="btn btn--gold btn--wide" id="toCheckoutBtn" type="button">Перейти к оформлению</button>
+<!-- ══════════ КАРТОЧКА ТОВАРА ══════════ -->
+<div class="modal" id="productModal" hidden>
+  <div class="modal__back" data-close></div>
+  <div class="modal__body" role="dialog" aria-modal="true" aria-label="Товар">
+    <button class="modal__x" data-close aria-label="Закрыть">✕</button>
+    <div class="modal__art" id="pmArt"></div>
+    <div class="modal__info">
+      <div class="modal__src" id="pmSrc"></div>
+      <h3 class="modal__name" id="pmName"></h3>
+      <div class="modal__art-code" id="pmArtCode"></div>
+      <p class="modal__desc" id="pmDesc"></p>
+      <div class="modal__price-row">
+        <div class="modal__price" id="pmPrice"></div>
+        <div class="modal__stock" id="pmStock"></div>
+      </div>
+      <div class="modal__buy">
+        <label class="qty">Кол-во<input type="number" min="1" value="1" id="pmQty"></label>
+        <button class="btn btn--red" id="pmAdd">В КОРЗИНУ<span class="btn__arr">→</span></button>
+      </div>
+      <ul class="modal__facts" id="pmFacts"></ul>
     </div>
   </div>
+</div>
 
-  <!-- шаг 2: форма заказа -->
-  <div class="drawer__view" id="viewForm" data-view="form" hidden>
-    <div class="drawer__body">
-      <p class="form__lead">Проверьте состав заказа и оставьте контакты — менеджер подтвердит макет нанесения и пришлёт ссылку на оплату.</p>
-      <div class="mini-order" id="miniOrder"></div>
-      <form class="form" id="orderForm" novalidate>
-        <label class="field">
-          <span>Имя</span>
-          <input type="text" name="name" required autocomplete="name" placeholder="Как к вам обращаться">
-        </label>
-        <label class="field">
-          <span>Телефон</span>
-          <input type="tel" name="phone" required autocomplete="tel" inputmode="tel" placeholder="+7 (___) ___-__-__">
-        </label>
-        <label class="field">
-          <span>Комментарий — текст гравировки, дата события</span>
-          <textarea name="comment" rows="3" placeholder="Например: на кубке — «Победителю турнира по футболу 2026»"></textarea>
-        </label>
-        <p class="form__error" id="formError" hidden>Заполните имя и телефон — без них менеджер не сможет связаться с вами.</p>
+<!-- ══════════ КОРЗИНА / ОФОРМЛЕНИЕ ══════════ -->
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer__back" data-close></div>
+  <div class="drawer__body">
+    <header class="drawer__head">
+      <h3 id="drawerTitle">КОРЗИНА</h3>
+      <button class="drawer__x" data-close aria-label="Закрыть">✕</button>
+    </header>
+
+    <div class="drawer__view" id="viewCart">
+      <div class="d-items" id="cartList"></div>
+      <div class="d-sum" id="cartSummary"></div>
+      <button class="btn btn--dark btn--wide" id="toFormBtn">ОФОРМИТЬ ЗАКАЗ<span class="btn__arr">→</span></button>
+    </div>
+
+    <div class="drawer__view" id="viewForm" hidden>
+      <form id="orderForm" class="d-form">
+        <h4>ПОКУПАТЕЛЬ</h4>
+        <label>Имя<input required name="name" placeholder="Как к вам обращаться"></label>
+        <label>Телефон<input required name="phone" type="tel" placeholder="+7 ___ ___-__-__"></label>
+        <label>Комментарий<input name="comment" placeholder="Например: гравировка 1–3 места"></label>
+        <h4>ДОСТАВКА</h4>
+        <div class="choice" id="deliveryChoice">
+          <label><input type="radio" name="delivery" value="Самовывоз со склада" checked><b>Самовывоз</b><span>сегодня, после звонка</span></label>
+          <label><input type="radio" name="delivery" value="Доставка курьером по городу"><b>Курьер по городу</b><span>1 день</span></label>
+          <label><input type="radio" name="delivery" value="Отправка ТК (СДЭК и др.)"><b>Транспортная компания</b><span>2–5 дней</span></label>
+        </div>
+        <h4>ОПЛАТА</h4>
+        <div class="choice" id="payChoice">
+          <label><input type="radio" name="pay" value="Наличными при получении" checked><b>Наличными</b><span>при получении</span></label>
+          <label><input type="radio" name="pay" value="Картой при получении"><b>Картой</b><span>при получении</span></label>
+          <label><input type="radio" name="pay" value="Счёт для юр. лица"><b>Счёт</b><span>для организаций</span></label>
+        </div>
+        <div class="d-sum" id="formSummary"></div>
+        <button class="btn btn--red btn--wide" type="submit">ОТПРАВИТЬ ЗАКАЗ<span class="btn__arr">→</span></button>
+        <p class="d-note">Заказ уйдёт сотруднику магазина в оформленной форме — он подтвердит наличие по 1С, заведёт заказ и перезвонит.</p>
       </form>
     </div>
-    <div class="drawer__foot">
-      <button class="btn btn--gold btn--wide" id="submitOrderBtn" type="button">Подтвердить заказ</button>
-      <button class="btn btn--plain btn--wide" id="backToCartBtn" type="button">Вернуться в корзину</button>
-    </div>
-  </div>
 
-  <!-- шаг 3: успех -->
-  <div class="drawer__view" id="viewDone" data-view="done" hidden>
-    <div class="drawer__body done">
-      <div class="done__medal" id="doneMedal" aria-hidden="true"></div>
-      <h3 class="done__title">Заказ <span id="orderNumber">№ НД-0000</span> принят</h3>
-      <p class="done__text">Менеджер свяжется с вами в течение часа, согласует макет нанесения и пришлёт ссылку на онлайн-оплату.</p>
-      <div class="done__order" id="doneOrder"></div>
-      <button class="btn btn--gold btn--wide" id="payLinkBtn" type="button">Ссылка на оплату (демо)</button>
-    </div>
-    <div class="drawer__foot">
-      <button class="btn btn--plain btn--wide" id="doneCloseBtn" type="button">Готово</button>
+    <div class="drawer__view drawer__view--done" id="viewDone" hidden>
+      <div class="done__mark">✓</div>
+      <h3>ЗАКАЗ ПРИНЯТ</h3>
+      <div class="done__spec" id="doneSpec"></div>
+      <p class="done__note">Спецификация передана сотруднику магазина. Он заведёт заказ в 1С, сверит остатки и свяжется с вами для подтверждения.</p>
+      <button class="btn btn--ghost" data-close>ПРОДОЛЖИТЬ</button>
     </div>
   </div>
 </aside>
 
-<!-- ══════════════ КАРТОЧКА ТОВАРА ══════════════ -->
-<div class="modal" id="productModal" role="dialog" aria-modal="true" aria-label="Карточка товара" hidden>
-  <div class="modal__card" id="modalCard"></div>
-</div>
-
-<!-- ══════════════ МЕДАЛЬКИН ══════════════ -->
-<button class="mascot-fab" id="mascotFab" type="button" aria-label="Открыть чат с ИИ-консультантом Медалькиным">
-  <span class="mascot mascot--fab" id="fabMascot" aria-hidden="true"></span>
-  <span class="mascot-fab__dot" id="fabDot" hidden></span>
+<!-- ══════════ МЕДАЛЬКИН ══════════ -->
+<button class="fab" id="fab" aria-label="Открыть чат с консультантом">
+  <span class="fab__medal" id="fabMedal"></span>
 </button>
 
-<section class="chat" id="chatPanel" aria-label="Чат с Медалькиным" aria-hidden="true">
+<section class="chat" id="chat" hidden>
   <header class="chat__head">
-    <div class="mascot mascot--chat" id="chatMascot" aria-hidden="true"></div>
-    <div class="chat__who">
-      <strong>Медалькин</strong>
-      <span class="chat__status" id="chatStatus">ИИ-консультант · на связи</span>
-    </div>
-    <button class="icon-btn icon-btn--light" id="chatClose" type="button" aria-label="Закрыть чат">
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    </button>
+    <div class="chat__avatar" id="chatAvatar"></div>
+    <div class="chat__who"><b>МЕДАЛЬКИН</b><span>агент-консультант · на сайте и в MAX</span></div>
+    <button class="chat__x" data-close-chat aria-label="Закрыть чат">✕</button>
   </header>
-  <div class="chat__log" id="chatLog" aria-live="polite"></div>
+  <div class="chat__log" id="chatLog"></div>
   <div class="chat__chips" id="chatChips"></div>
-  <form class="chat__input" id="chatForm">
-    <input type="text" id="chatInput" placeholder="Например: нужны медали на школьный турнир…" autocomplete="off" aria-label="Сообщение Медалькину">
-    <button class="chat__send" type="submit" aria-label="Отправить">
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10 17 3l-3.2 14L3 10zm0 0 7-3.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    </button>
+  <form class="chat__form" id="chatForm">
+    <input id="chatInput" placeholder="Например: кубки на хоккейный турнир, бюджет 15000" autocomplete="off" aria-label="Сообщение консультанту">
+    <button class="chat__send" aria-label="Отправить">→</button>
   </form>
-  <footer class="chat__foot">Прототип логики консультанта · интеграция с мессенджером MAX — на следующем этапе</footer>
 </section>
 
-<script src="js/data.js"></script>
-<script src="js/medalkin.js"></script>
-<script src="js/app.js"></script>
 </body>
 </html>
