@@ -426,6 +426,8 @@ window.App = (() => {
       inp.value = '';
     });
 
+    $('#fab').addEventListener('click', openChat);
+
     $('#fabMedal').innerHTML = mascotSVG({ size: 44 });
     $('#chatAvatar').innerHTML = mascotSVG({ size: 40 });
     const stripMascot = document.querySelector('.agent-strip__mascot');
