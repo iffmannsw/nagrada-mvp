@@ -80,8 +80,9 @@ class MedalkinBrain {
       }
     }
     if (p.src === 'shop') s += 0.6;              // наличие в магазине — приоритет
-    if (p.inStock > 20) s += 0.6;
-    if (p.img) s += 0.3;                          // с фото — привлекательнее
+    const bestAvail = p.variants ? Math.max(...p.variants.map(v => v.avail || 0), p.stock || 0) : (p.stock || 0);
+    if (bestAvail > 20) s += 0.6;
+    if (p.cover && p.cover.img) s += 0.3;          // с фото поставщика — привлекательнее
     return s + p.pop * 0.05;
   }
 
@@ -95,7 +96,7 @@ class MedalkinBrain {
 
   topStock(k = 4) {
     return this.goods.filter(p => p.src === 'shop')
-      .sort((a, b) => b.inStock - a.inStock).slice(0, k);
+      .sort((a, b) => (b.stock || 0) - (a.stock || 0)).slice(0, k);
   }
 
   withPhoto(k = 4) {
@@ -105,8 +106,8 @@ class MedalkinBrain {
     /* у магазина реальные фото есть не у всех позиций — добираем ходовыми
        товарами с иллюстрациями, чтобы ответ был всегда содержательным */
     if (list.length < k) {
-      const extra = this.goods.filter(p => !p.img && (!wantCat || p.cat === wantCat))
-        .sort((a, b) => b.inStock - a.inStock);
+      const extra = this.goods.filter(p => !(p.cover && p.cover.img) && (!wantCat || p.cat === wantCat))
+        .sort((a, b) => (b.stock || 0) - (a.stock || 0));
       list = list.concat(extra.slice(0, k - list.length));
     }
     return list.slice(0, k);
@@ -124,7 +125,7 @@ class MedalkinBrain {
 
     if (r.who) return this.say('Я Медалькин — агент-консультант магазина «РАСПОРТ». Подбираю награды под задачу и бюджет, показываю наличие магазина и удалённого склада поставщика, собираю заказ со спецификацией. Просто напишите: «нужны медали и кубки на турнир, бюджет 20000».');
 
-    if (r.delivery) return this.say('Доставка: самовывоз со склада магазина — сегодня после подтверждения; курьер по городу — 1 день; СДЭК и другие ТК — 2–5 дней. Позиции под заказ приезжают от поставщика за 2–3 дня и уходят в тот же заказ.');
+    if (r.delivery) return this.say('Доставка: самовывоз со склада магазина — сегодня после подтверждения; курьер по городу — 1 день; СДЭК и другие ТК — 2–5 дней. Позиции под заказ приезжают от поставщика за 5–7 дней и уходят в тот же заказ.');
     if (r.engrave) return this.say('Гравировка — делаем: имена на медалях, надписи на кубках, заполнение грамот по вашему списку. Укажите текст при оформлении в комментарии к заказу, менеджер согласует макет.');
     if (r.payment) return this.say('Оплата: наличными или картой при получении, а для организаций — счёт. В комментарии к заказу укажите реквизиты — подготовим документы.');
 
@@ -171,14 +172,14 @@ class MedalkinBrain {
       if (r.theme) head += `, тема «${THEMES[r.theme] || r.theme}»`;
       if (r.budget) head += `, до ${this.money(r.budget)}`;
       if (r.price && !r.budget) head = 'Вот цены на ходовые позиции';
-      head += '. «В наличии» — выдача сегодня, «под заказ» — 2–3 дня:';
+      head += '. «В наличии» — отгрузка сразу, «под заказ» — 5–7 дней:';
       return this.say(head, list, ['Скинь фото', 'Что есть в наличии?', 'Оформи заказ']);
     }
 
     if (/(под заказ|удалённ|удаленн|поставщик|rossimvol|ассортимент)/.test(text.toLowerCase())) {
       const remote = this.goods.filter(p => p.src === 'remote' && (!this.pending?.cat || p.cat === this.pending.cat))
         .sort((a, b) => a.price - b.price).slice(0, 4);
-      return this.say('Удалённый склад поставщика — кубки и грамоты под заказ 2–3 дня. Вот доступное:', remote, ['Нужны кубки подешевле', 'Оформи заказ', 'А медали есть?']);
+      return this.say('Удалённый склад поставщика — кубки и грамоты под заказ 5–7 дней. Вот доступное:', remote, ['Нужны кубки подешевле', 'Оформи заказ', 'А медали есть?']);
     }
 
     if (/(дешев|подешев|эконом|бюджетн)/.test(text.toLowerCase())) {

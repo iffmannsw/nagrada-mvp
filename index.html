@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Inter:wght@400;500;600&family=Russo+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20">
+<link rel="stylesheet" href="css/style.css?v=21">
 <script src="js/data.js" defer></script>
 <script src="js/medalkin.js" defer></script>
 <script src="js/shop.js" defer></script>
@@ -39,6 +39,7 @@
     </a>
     <nav class="header__nav">
       <a href="#catalog" data-anchor>КАТАЛОГ</a>
+      <a href="#engraving" data-anchor>ГРАВИРОВКА</a>
       <a href="#how" data-anchor>КАК ЗАКАЗАТЬ</a>
       <a href="#agent" data-anchor>КОНСУЛЬТАНТ</a>
       <a href="#contacts" data-anchor>КОНТАКТЫ</a>
@@ -58,8 +59,8 @@
   <div class="container hero__grid">
     <div class="hero__text">
       <div class="hero__kicker"><i></i>НАГРАДНАЯ ПРОДУКЦИЯ ДЛЯ СПОРТА</div>
-      <h1 class="hero__title">НАГРАДЫ,<br>ДОСТОЙНЫЕ&nbsp;<em>ПОБЕДЫ</em></h1>
-      <p class="hero__lead">Медали, кубки и грамоты для турниров, школ и корпоративных премий. Собственный склад — выдача сегодня. Удалённый склад поставщика — под заказ 2–3 дня.</p>
+      <h1 class="hero__title">НАГРАДЫ,<br>ДОСТОЙНЫЕ <em>ПОБЕДЫ</em></h1>
+      <p class="hero__lead">Медали, кубки и грамоты для турниров, школ и корпоративных премий. Собственный склад — продаём и отгружаем сразу. Удалённый склад поставщика — привозим под заказ.</p>
       <div class="hero__actions">
         <a class="btn btn--dark" href="#catalog" data-anchor>СМОТРЕТЬ КАТАЛОГ<span class="btn__arr">→</span></a>
         <button class="btn btn--ghost" data-open-chat>ЗАДАТЬ ВОПРОС</button>
@@ -67,15 +68,15 @@
       <dl class="hero__stats">
         <div><dt>в наличии</dt><dd><b id="statShop">—</b> позиций</dd></div>
         <div><dt>под заказ</dt><dd><b id="statRemote">—</b> позиций</dd></div>
-        <div><dt>выдача заказа</dt><dd><b>от 1</b> дня</dd></div>
+        <div><dt>отгрузка</dt><dd><b>сразу</b> со склада</dd></div>
       </dl>
     </div>
     <div class="hero__art" aria-hidden="true">
       <figure class="hero__ph hero__ph--a"><img src="img/cup_1523.jpg" alt="" loading="lazy"></figure>
       <figure class="hero__ph hero__ph--b"><img src="img/medal_mmc7071.jpg" alt="" loading="lazy"></figure>
       <figure class="hero__ph hero__ph--c"><img src="img/remote/8300.jpeg" alt="" loading="lazy"></figure>
-      <div class="hero__tag hero__tag--a">СКЛАД<span>выдача сегодня</span></div>
-      <div class="hero__tag hero__tag--b">ПОД ЗАКАЗ<span>2–3 дня</span></div>
+      <div class="hero__tag hero__tag--a">СКЛАД<span>отгрузка сразу</span></div>
+      <div class="hero__tag hero__tag--b">ПОД ЗАКАЗ<span>5–7 дней</span></div>
     </div>
   </div>
   <div class="hero__ribbon" aria-hidden="true">
@@ -96,10 +97,10 @@
 
     <div class="mode" role="tablist" aria-label="Источник товара">
       <button class="mode__btn is-active" role="tab" aria-selected="true" data-mode="shop" id="modeShop">
-        <b>МАГАЗИН</b><span>собственный склад · выдача сегодня · <i id="modeShopCount">…</i> поз.</span>
+        <b>МАГАЗИН</b><span>собственный склад · отгрузка сразу · <i id="modeShopCount">…</i> поз.</span>
       </button>
       <button class="mode__btn" role="tab" aria-selected="false" data-mode="remote" id="modeRemote">
-        <b>УДАЛЁННЫЙ СКЛАД</b><span>склад поставщика · под заказ 2–3 дня · <i id="modeRemoteCount">…</i> поз.</span>
+        <b>УДАЛЁННЫЙ СКЛАД</b><span>склад поставщика · под заказ 5–7 дней · <i id="modeRemoteCount">…</i> поз.</span>
       </button>
     </div>
 
@@ -124,6 +125,27 @@
   </div>
 </section>
 
+<!-- ══════════ ГРАВИРОВКА ══════════ -->
+<section class="engrave-sec" id="engraving">
+  <div class="container">
+    <header class="sec-head">
+      <div class="sec-head__kick"><i></i>УСЛУГИ МАСТЕРСКОЙ</div>
+      <h2 class="sec-head__title">ГРАВИРОВКА<em> И ОФОРМЛЕНИЕ</em></h2>
+      <p class="sec-head__note">Сделаем награду именной: гравировка на медалях и кубках, заполнение грамот, таблички и шильды. Работы выполняем по запросу — расчёт после согласования текста и макета. Примеры работ собираем в архив референсов: покажем близкие к вашей задаче.</p>
+    </header>
+    <ol class="services">
+      <li><b>01</b><h3>Гравировка медалей</h3><p>Имя победителя, место, дата турнира на обороте или фиане медали. До 2 строк, шрифт по выбору.</p><span class="services__tag">от 50 ₽ / шт</span></li>
+      <li><b>02</b><h3>Гравировка кубков</h3><p>Надпись на чаше или табличке на основании: турнир, год, победитель. Макет согласуем до работы.</p><span class="services__tag">от 150 ₽</span></li>
+      <li><b>03</b><h3>Заполнение грамот</h3><p>Печать текста и имён по вашему списку на грамотах и дипломах. Пришлите список — заполним все позиции заказа.</p><span class="services__tag">от 20 ₽ / шт</span></li>
+      <li><b>04</b><h3>Таблички и шильды</h3><p>Замена или изготовление гравировальных табличек под кубки и призёры: металл, пластик, любой текст.</p><span class="services__tag">по запросу</span></li>
+    </ol>
+    <div class="engrave-note">
+      <p><b>Как заказать услугу.</b> Добавьте товары в корзину и при оформлении отметьте «Гравировка: ДА» с текстом — услуга попадёт в спецификацию, сотрудник согласует макет и стоимость. Либо напишите Медалькину — соберёт заказ вместе с оформлением.</p>
+      <button class="btn btn--red" data-open-chat>ОБСУДИТЬ С КОНСУЛЬТАНТОМ<span class="btn__arr">→</span></button>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════ КАК ЗАКАЗАТЬ ══════════ -->
 <section class="how" id="how">
   <div class="container">
@@ -135,7 +157,7 @@
       <li><b>01</b><h3>Запрос или подбор</h3><p>Опишите задачу консультанту — «нужны медали и кубки на турнир, бюджет 30 000 ₽». Медалькин соберёт подборку с ценами и фото.</p></li>
       <li><b>02</b><h3>Спецификация</h3><p>Товар + количество + способ доставки и оплаты. Всё в одном документе — как счёт, только быстрее.</p></li>
       <li><b>03</b><h3>Подтверждение</h3><p>Заказ с данными покупателя уходит сотруднику магазина в оформленной форме. Мы сверяем наличие по 1С.</p></li>
-      <li><b>04</b><h3>Выдача и доставка</h3><p>Самовывоз — в день заказа (склад магазина). Позиции под заказ — 2–3 дня. Доставка по городу и в регионы.</p></li>
+      <li><b>04</b><h3>Выдача и доставка</h3><p>Самовывоз — в день заказа (склад магазина). Позиции под заказ — 5–7 дней с момента подтверждения. Доставка по городу и в регионы.</p></li>
     </ol>
     <div class="agent-strip" id="agent">
       <div class="agent-strip__text">
@@ -208,6 +230,8 @@
       <h3 class="modal__name" id="pmName"></h3>
       <div class="modal__art-code" id="pmArtCode"></div>
       <p class="modal__desc" id="pmDesc"></p>
+      <div class="modal__swatches swatches" id="pmVariants" hidden></div>
+      <div class="modal__var-label" id="pmVarLabel" hidden></div>
       <div class="modal__price-row">
         <div class="modal__price" id="pmPrice"></div>
         <div class="modal__stock" id="pmStock"></div>
@@ -237,11 +261,25 @@
     </div>
 
     <div class="drawer__view" id="viewForm" hidden>
-      <form id="orderForm" class="d-form">
+      <form id="orderForm" class="d-form" novalidate>
         <h4>ПОКУПАТЕЛЬ</h4>
-        <label>Имя<input required name="name" placeholder="Как к вам обращаться"></label>
-        <label>Телефон<input required name="phone" type="tel" placeholder="+7 ___ ___-__-__"></label>
-        <label>Комментарий<input name="comment" placeholder="Например: гравировка 1–3 места"></label>
+        <label>Имя<input name="name" placeholder="Как к вам обращаться">
+          <span class="field-err">Укажите имя — так к вам обратится сотрудник</span></label>
+        <label>Телефон<input name="phone" type="tel" placeholder="+7 ___ ___-__-__">
+          <span class="field-err">Укажите телефон для подтверждения заказа</span></label>
+        <label>Комментарий<input name="comment" placeholder="Необязательно"></label>
+
+        <div class="engrave-wrap" id="engraveWrap">
+          <h4>ГРАВИРОВКА</h4>
+          <div class="choice engrave">
+            <label><input type="radio" name="engrave" value="yes"><b>ДА</b><span>нужна — см. блок услуг ниже</span></label>
+            <label><input type="radio" name="engrave" value="no"><b>НЕТ</b><span>без гравировки</span></label>
+          </div>
+          <span class="field-err">Отметьте: нужна гравировка или нет</span>
+        </div>
+        <label id="engraveText">Текст гравировки<input name="engraveText" placeholder="Например: «Турнир памяти…», 1–3 место, ФИО">
+          <span class="field-err">Укажите текст — без него не принять гравировку в работу</span></label>
+
         <h4>ДОСТАВКА</h4>
         <div class="choice" id="deliveryChoice">
           <label><input type="radio" name="delivery" value="Самовывоз со склада" checked><b>Самовывоз</b><span>сегодня, после звонка</span></label>

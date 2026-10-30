@@ -256,36 +256,64 @@ function svgCup(c) {
 }
 
 /* ══════════ Медалькин ══════════ */
+/* Медалькин-Солнце: в имени РАспорт «РА» — Солнце, поэтому маскот —
+   солнечная медаль: диск в лучах-лепестках, тёплое золото, фирменная
+   красная лента РАСПОРТ. Реальные солнечные медали появятся в архиве
+   референсов — знак рисован под этот мотив. */
 function mascotSVG(opts = {}) {
   const happy = !!opts.happy, g = uid();
-  return `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Медалькин">
+  /* лучи солнца: 12 лепестков вокруг диска */
+  let rays = '';
+  for (let i = 0; i < 12; i++) {
+    const a = (i * 30 - 90) * Math.PI / 180;
+    const x1 = 100 + Math.cos(a) * 64, y1 = 152 + Math.sin(a) * 64;
+    const x2 = 100 + Math.cos(a) * 82, y2 = 152 + Math.sin(a) * 82;
+    rays += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }
+  return `<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Медалькин — солнечная медаль">
   <defs>
     <linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F0D46A"/><stop offset=".55" stop-color="#C9A227"/><stop offset="1" stop-color="#A4831B"/>
+      <stop offset="0" stop-color="#F6DE83"/><stop offset=".5" stop-color="#E8B93F"/><stop offset="1" stop-color="#C9930F"/>
     </linearGradient>
-    <clipPath id="c${g}"><circle cx="100" cy="150" r="70"/></clipPath>
+    <linearGradient id="r${g}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E03810"/><stop offset="1" stop-color="#B92E0D"/>
+    </linearGradient>
+    <clipPath id="c${g}"><circle cx="100" cy="152" r="62"/></clipPath>
   </defs>
-  <path d="M62 0h34l6 62-22 40-4-6-14-96z" fill="#8E2130"/>
-  <path d="M104 0h34l-14 96-24 88-16-88 6-58z" fill="#6B1A25"/>
-  <path d="M94 0h10l4 50-9 12-9-12z" fill="#C9A227" opacity=".9"/>
-  <circle cx="100" cy="150" r="70" fill="url(#${g})"/>
-  <circle cx="100" cy="150" r="70" fill="none" stroke="#8a6d15" stroke-width="2.5"/>
-  <circle cx="100" cy="150" r="57" fill="none" stroke="#8a6d15" stroke-width="1.6" stroke-dasharray="1 5" stroke-linecap="round"/>
-  <g clip-path="url(#c${g})"><rect class="m-shine" x="-14" y="80" width="18" height="140" rx="9" fill="#FFFDF6" opacity="0"/></g>
-  <g class="m-face">
-    <ellipse class="m-eye" cx="76" cy="140" rx="7.5" ry="10" fill="#4A3410"/>
-    <ellipse class="m-eye" cx="124" cy="140" rx="7.5" ry="10" fill="#4A3410"/>
-    <circle cx="78.5" cy="136.5" r="2.6" fill="#FFF"/>
-    <circle cx="126.5" cy="136.5" r="2.6" fill="#FFF"/>
-    <ellipse cx="60" cy="160" rx="10" ry="6" fill="#E89B5A" opacity=".55"/>
-    <ellipse cx="140" cy="160" rx="10" ry="6" fill="#E89B5A" opacity=".55"/>
-    ${happy
-      ? `<path class="m-smile" d="M80 164c6 12 34 12 40 0" fill="#4A3410" stroke="#4A3410" stroke-width="7" stroke-linejoin="round"/>`
-      : `<path class="m-smile" d="M82 166c5 8 31 8 36 0" fill="none" stroke="#4A3410" stroke-width="6" stroke-linecap="round"/>`}
+
+  <!-- лента РАСПОРТ -->
+  <path d="M56 6h30l8 68-16 26-10-8z" fill="url(#r${g})"/>
+  <path d="M114 6h30l-18 86-24 10-8-12z" fill="#9E250A"/>
+  <path d="M100 6h12l6 46-12 10-12-10z" fill="#E8B93F"/>
+
+  <!-- лучи -->
+  <g class="m-rays" stroke="#E8B93F" stroke-width="9" stroke-linecap="round" opacity=".92">${rays}</g>
+
+  <!-- солнечный диск -->
+  <circle cx="100" cy="152" r="63" fill="url(#${g})"/>
+  <circle cx="100" cy="152" r="63" fill="none" stroke="#B98A12" stroke-width="2.5"/>
+  <circle cx="100" cy="152" r="50" fill="none" stroke="#FFF3C4" stroke-width="1.6" stroke-dasharray="1 6" stroke-linecap="round" opacity=".9"/>
+  <g clip-path="url(#c${g})">
+    <rect class="m-shine" x="-14" y="82" width="18" height="140" rx="9" fill="#FFFDF6" opacity="0"/>
+    <circle cx="72" cy="128" r="26" fill="#FFF6D8" opacity=".28"/>
   </g>
-  <path class="m-spark" d="M34 66l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#E9C759"/>
-  <path class="m-spark m-spark--2" d="M170 96l2.4 5.6 5.6 2.4-5.6 2.4-2.4 5.6-2.4-5.6-5.6-2.4 5.6-2.4z" fill="#E9C759"/>
-  <path class="m-spark m-spark--3" d="M160 40l2 4.6 4.6 2-4.6 2-2 4.6-2-4.6-4.6-2 4.6-2z" fill="#E9C759"/>
+
+  <!-- лицо -->
+  <g class="m-face">
+    <ellipse class="m-eye" cx="78" cy="144" rx="7.5" ry="10.5" fill="#5B3A08"/>
+    <ellipse class="m-eye" cx="122" cy="144" rx="7.5" ry="10.5" fill="#5B3A08"/>
+    <circle cx="80.5" cy="140.5" r="2.8" fill="#FFF"/>
+    <circle cx="124.5" cy="140.5" r="2.8" fill="#FFF"/>
+    <ellipse cx="60" cy="163" rx="10" ry="6" fill="#F2A65A" opacity=".6"/>
+    <ellipse cx="140" cy="163" rx="10" ry="6" fill="#F2A65A" opacity=".6"/>
+    ${happy
+      ? `<path class="m-smile" d="M80 168c6 13 34 13 40 0" fill="#5B3A08" stroke="#5B3A08" stroke-width="7" stroke-linejoin="round"/>`
+      : `<path class="m-smile" d="M82 170c5 8 31 8 36 0" fill="none" stroke="#5B3A08" stroke-width="6" stroke-linecap="round"/>`}
+  </g>
+
+  <path class="m-spark" d="M30 60l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#F2C94C"/>
+  <path class="m-spark m-spark--2" d="M172 100l2.4 5.6 5.6 2.4-5.6 2.4-2.4 5.6-2.4-5.6-5.6-2.4 5.6-2.4z" fill="#F2C94C"/>
+  <path class="m-spark m-spark--3" d="M158 36l2 4.6 4.6 2-4.6 2-2 4.6-2-4.6-4.6-2 4.6-2z" fill="#F2C94C"/>
 </svg>`;
 }
 
