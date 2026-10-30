@@ -42,6 +42,15 @@ const Shop = (() => {
   }
 
   const METAL_DOT = { gold: '#D4AF37', silver: '#C0C0C8', bronze: '#CD7F32', mix: 'linear-gradient(135deg,#D4AF37 50%,#C0C0C8 50%)' };
+  /* очерёдность вариантов: 1 место — золото, 2 — серебро, 3 — бронза;
+     размеры — по возрастанию */
+  const PLACE_ORDER = { gold: 0, silver: 1, bronze: 2, antique: 3, mix: 4 };
+  const sortVariants = vs => vs.slice().sort((a, b) => {
+    const ka = PLACE_ORDER[a.metal] ?? 9, kb = PLACE_ORDER[b.metal] ?? 9;
+    if (ka !== kb) return ka - kb;
+    const sa = parseFloat(a.size) || 0, sb = parseFloat(b.size) || 0;
+    return sa - sb;
+  });
   const RIBBON_BY_THEME = { football: 'green', hockey: 'blue', chess: 'black',
     volleyball: 'blue', run: 'blue', school: 'blue', victory: 'red', universal: 'red' };
 
@@ -56,12 +65,12 @@ const Shop = (() => {
   };
 
   function normShop(g) {
-    const vs = (g.variants || []).map((v, i) => ({
+    const vs = sortVariants((g.variants || []).map((v, i) => ({
       idx: i, kind: 'metal', metal: v.metal || 'mix', size: '',
       label: v.char || METAL_LABELS[v.metal] || '',
       img: v.img || null, price: v.price,
       avail: v.avail ?? v.inStock ?? 0, inStock: v.inStock ?? v.avail ?? 0,
-    }));
+    })));
     const cover = coverVariant(vs);
     return {
       id: 'S:' + g.art, src: 'shop', url: null,
@@ -75,13 +84,13 @@ const Shop = (() => {
   }
 
   function normRemote(g) {
-    const vs = (g.variants || []).map((v, i) => ({
+    const vs = sortVariants((g.variants || []).map((v, i) => ({
       idx: i, kind: v.kind || 'single', metal: v.metal || '', size: v.size || '',
       label: v.kind === 'size' ? (v.size + ' см') : (v.label || v.code || ''),
       img: v.img ? (String(v.img).startsWith('img/') ? v.img : null) : null,
       price: v.supplierPrice || g.retail,
       avail: 0, inStock: !!v.inStock, qty: v.qty || 0,
-    }));
+    })));
     return {
       id: 'R:' + g.art, src: 'remote', url: g.url,
       name: g.name, art: g.art, cat: g.cat, theme: g.theme || 'universal',

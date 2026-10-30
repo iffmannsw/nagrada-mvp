@@ -31,7 +31,7 @@ window.App = (() => {
   const cartHasShop = () => [...cart.keys()].some(k => k[0] === 'S');
 
   /* ══════════ КОРЗИНА ══════════ */
-  function addToCart(id, vi, qty = 1) {
+  function addToCart(id, vi, qty = 1, silent = false) {
     const p = byId(id);
     if (!p) return;
     const v = p.variants[vi] || p.variants[0];
@@ -42,7 +42,7 @@ window.App = (() => {
     if (p.src === 'shop' && newQty > v.avail) newQty = v.avail;
     cart.set(key, { id, vi: p.variants.indexOf(v), qty: newQty });
     syncCartUI();
-    openDrawer('cart');
+    if (!silent) openDrawer('cart');
   }
 
   function syncCartUI() {
@@ -309,12 +309,18 @@ window.App = (() => {
     if (!text.trim()) return;
     addMsg(text.replace(/</g, '&lt;'), 'user');
     const r = brain.handle(text);
-    if (r.order && r.products) {
-      cart.clear();
-      r.products.forEach(p => cart.set(p.id + ':0', { id: p.id, vi: 0, qty: 1 }));
-      syncCartUI();
+    /* исполняем действия агента: добавить в корзину (тихо), открыть
+       корзину/форму, очистить — бот ведёт покупку руками */
+    let openCart = false;
+    if (r.actions) {
+      for (const a of r.actions) {
+        if (a.t === 'add') addToCart(a.id, a.vi, a.qty, true);
+        else if (a.t === 'openCart') openCart = true;
+        else if (a.t === 'openForm') { openDrawer('form'); }
+        else if (a.t === 'clearCart') { cart.clear(); syncCartUI(); }
+      }
     }
-    if (text.includes('Открыть корзину')) { openDrawer('cart'); return; }
+    if (openCart) { openDrawer('cart'); }
     await botSay(r.text, r.products, r.order ? msgOrderHTML(r.order) : null, r.chips);
   }
   function msgOrderHTML(order) {
@@ -407,6 +413,10 @@ window.App = (() => {
       syncCartUI();
       form.reset();
       $('#engraveText').classList.remove('is-on');
+      /* бот комментирует завершение — увидит сообщение при возврате в чат */
+      const fin = brain.orderConfirmed();
+      addMsg(fin.text);
+      setChips(['Нужны ещё награды?', 'Что есть в наличии?']);
     });
 
     $('#chatForm').addEventListener('submit', e => {
@@ -424,11 +434,15 @@ window.App = (() => {
 
   /* ══════════ ЗАПУСК ══════════ */
   document.addEventListener('DOMContentLoaded', async () => {
-    brain = new MedalkinBrain(allGoods);
+    brain = new MedalkinBrain(allGoods());   // [] до загрузки JSON — setGoods ниже наполнит
     bind();
     Shop.bindEvents();
-    await Shop.init();
-    brain.setGoods(allGoods);
+    try {
+      await Shop.init();
+    } catch (e) {
+      console.error('[shop.init]', e);
+    }
+    brain.setGoods(allGoods());
     syncCartUI();
     setChips(['Что есть в наличии?', 'Нужны кубки на хоккей', 'Бюджет 15000 на медали', 'Как заказать?']);
   });
