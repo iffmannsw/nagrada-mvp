@@ -174,6 +174,19 @@ a { color: inherit; }
 .hero__tag--a { left: 6%; top: 30%; }
 .hero__tag--b { right: 8%; bottom: 12%; background: var(--red); }
 
+/* метка услуги на фото медали — в стиле товарных меток каталога */
+.hero__engrave {
+  position: absolute; z-index: 4; top: 10px; left: 10px;
+  max-width: calc(100% - 20px);
+  background: var(--ink); color: #fff; padding: 5px 9px;
+  font-family: var(--font-head); font-weight: 800; font-size: 9.5px;
+  letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hero__engrave::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: var(--red);
+}
+
 /* красная лента-бегунок */
 .hero__ribbon { background: var(--red); overflow: hidden; white-space: nowrap; }
 .hero__ribbon-track { display: inline-block; padding: 11px 0; animation: ribbon 36s linear infinite; }
@@ -687,6 +700,7 @@ a { color: inherit; }
 @media (max-width: 719px) {
   .container { padding: 0 16px; }
   .logo__svg { width: 146px; height: 24px; }
+  .hero__engrave { font-size: 8px; padding: 4px 7px; white-space: normal; line-height: 1.5; letter-spacing: .12em; }
   .hero__grid { padding-top: 44px; padding-bottom: 48px; }
   .hero__title { font-size: clamp(34px, 10.5vw, 44px); line-height: 1.12; }
   .hero__lead { font-size: 15.5px; }
