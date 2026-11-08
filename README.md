@@ -69,6 +69,35 @@ tools/logo-source.pdf    — логотип РАСПОРТ (исходник)
 tools/max-bot/        — каркас бота MAX: общий мозг + webhook + сценарий оформления в диалоге
 ```
 
+
+## Совместная работа
+
+Репозиторий: https://github.com/iffmannsw/nagrada-mvp
+Живой сайт (GitHub Pages, обновляется при пуше в `main`):
+https://iffmannsw.github.io/nagrada-mvp/
+
+Быстрый старт для помощника:
+
+```bash
+git clone https://github.com/iffmannsw/nagrada-mvp.git
+cd nagrada-mvp
+python3 -m http.server 8765          # http://localhost:8765/
+```
+
+Правила простые:
+- работаем в ветках `feat/…` `fix/…`, в `main` — через Pull Request;
+- **кэш браузера**: у css/js есть `?v=N` — при изменении стилей/скриптов
+  поднимайте версию в `index.html`, иначе изменения не увидим;
+- данные лежат в `data/*.json` (не редактировать руками — их генерят
+  `tools/convert_1c.py` и `tools/parse_rossimvol.py`, регламент в
+  `tools/EXCHANGE.md`);
+- мозг агента общий для сайта и MAX: правите `js/medalkin.js` —
+  скопируйте в `tools/max-bot/brain.js` (`cp js/medalkin.js tools/max-bot/brain.js`);
+- демо-данные заказов (спецификация) — экран «Заказ принят» + консоль.
+
+Доступ на запись — по приглашению: Settings → Collaborators → Add people
+(или попросите владельца добавить ваш GitHub-аккаунт).
+
 ## Демо
 
 https://iffmannsw.github.io/nagrada-mvp/
