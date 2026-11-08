@@ -12,11 +12,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=Inter:wght@400;500;600&family=Russo+One&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=26">
+<link rel="stylesheet" href="css/style.css?v=27">
 <script src="js/data.js?v=22" defer></script>
 <script src="js/medalkin.js?v=22" defer></script>
 <script src="js/shop.js?v=22" defer></script>
-<script src="js/app.js?v=25" defer></script>
+<script src="js/app.js?v=26" defer></script>
 </head>
 <body style="background:#FFFFFF">
 
@@ -302,6 +302,10 @@
       <div class="done__mark">✓</div>
       <h3>ЗАКАЗ ПРИНЯТ</h3>
       <div class="done__spec" id="doneSpec"></div>
+      <div class="done__export">
+        <button class="btn btn--dark" id="specDownload">СКАЧАТЬ СПЕЦИФИКАЦИЮ<span class="btn__arr">↓</span></button>
+        <button class="btn btn--ghost" id="specCopy">КОПИРОВАТЬ ТЕКСТ<span class="btn__arr">⧉</span></button>
+      </div>
       <p class="done__note">Спецификация передана сотруднику магазина. Он заведёт заказ в 1С, сверит остатки и свяжется с вами для подтверждения.</p>
       <button class="btn btn--ghost" data-close>ПРОДОЛЖИТЬ</button>
     </div>

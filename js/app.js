@@ -137,6 +137,58 @@ window.App = (() => {
       <div class="sum-row sum-row--total"><span>ИТОГО</span><b>${fmt(spec.total)}</b></div>`;
   }
 
+  /* оформленная текстовая форма для сотрудника: переслать в мессенджер
+     или приложить к заказу в 1С */
+  function specText(spec) {
+    const pad = (s, n) => String(s).padEnd(n);
+    const rows = spec.items.map((l, i) =>
+      `${pad(i + 1 + '.', 5)}${pad(l.name.slice(0, 44), 46)}${pad(l.art, 12)}${pad(l.src, 18)}${pad(String(l.qty), 6)}${pad(fmt(l.price), 10)}${fmt(l.sum)}`);
+    return [
+      '════════════════════════════════════════════════════',
+      `  СПЕЦИФИКАЦИЯ № ${spec.num}                    РАСПОРТ`,
+      `  от ${spec.date}`,
+      '════════════════════════════════════════════════════',
+      `${pad('№', 5)}${pad('Товар', 46)}${pad('Артикул', 12)}${pad('Склад', 18)}${pad('Кол-во', 6)}${pad('Цена', 10)}Сумма`,
+      '────────────────────────────────────────────────────',
+      ...rows,
+      '────────────────────────────────────────────────────',
+      `Гравировка: ${spec.engrave}`,
+      `Доставка:   ${spec.delivery}`,
+      `Оплата:     ${spec.pay}`,
+      `Покупатель: ${spec.buyer.name}, тел. ${spec.buyer.phone}`,
+      `Комментарий: ${spec.buyer.comment}`,
+      `ИТОГО: ${fmt(spec.total)}`,
+      '────────────────────────────────────────────────────',
+      'Заказ с сайта «РАСПОРТ» — заведите в 1С и перезвоните',
+      'покупателю для подтверждения. Позиции «Магазин» —',
+      'отгрузка сразу; «Удалённый склад» — 5–7 дней.',
+    ].join('\n');
+  }
+
+  let lastSpec = null;
+  function downloadSpec() {
+    if (!lastSpec) return;
+    const blob = new Blob(['\uFEFF' + specText(lastSpec)], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Спецификация_${lastSpec.num}_РАСПОРТ.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+  async function copySpec(btn) {
+    if (!lastSpec) return;
+    try {
+      await navigator.clipboard.writeText(specText(lastSpec));
+      btn.textContent = 'СКОПИРОВАНО ✓';
+      setTimeout(() => { btn.textContent = 'КОПИРОВАТЬ ТЕКСТ'; }, 2200);
+    } catch (e) {
+      /* clipboard запрещён (http/file) — откат на выделение */
+      downloadSpec();
+    }
+  }
+
   /* ══════════ МОДАЛКА ТОВАРА (с вариантами) ══════════ */
   function openProduct(id, vi = 0) {
     const p = byId(id);
@@ -407,6 +459,7 @@ window.App = (() => {
       /* демо: спецификация — готовый документ для сотрудника (передать в 1С) */
       console.log('=== СПЕЦИФИКАЦИЯ ДЛЯ СОТРУДНИКА ===');
       console.log(JSON.stringify(spec, null, 2));
+      lastSpec = spec;
       $('#doneSpec').innerHTML = specHTML(spec);
       openDrawer('done');
       cart.clear();
@@ -427,6 +480,8 @@ window.App = (() => {
     });
 
     $('#fab').addEventListener('click', openChat);
+    $('#specDownload').addEventListener('click', downloadSpec);
+    $('#specCopy').addEventListener('click', e => copySpec(e.currentTarget));
 
     $('#fabMedal').innerHTML = mascotSVG({ size: 44 });
     $('#chatAvatar').innerHTML = mascotSVG({ size: 40 });

@@ -597,6 +597,8 @@ a { color: inherit; }
 .done__spec b { color: var(--ink); font-weight: 600; }
 .done__spec .spec-title { font-family: var(--font-head); font-weight: 800; letter-spacing: .12em; font-size: 11px; color: var(--red); text-transform: uppercase; }
 .done__note { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.done__export { display: flex; gap: 10px; width: 100%; }
+.done__export .btn { flex: 1; justify-content: center; font-size: 11px; padding: 12px 10px; }
 
 /* ══════════ ЧАТ МЕДАЛЬКИН ══════════ */
 .fab {
